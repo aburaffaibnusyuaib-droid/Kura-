@@ -30,9 +30,14 @@ abstract final class AppColors {
 
   // Status warna (JANGAN gunakan warna saja; selalu sertakan teks/ikon)
   static const Color statusSafe = Color(0xFF22C55E);
-  static const Color statusWarning = sunsetOrange;
+  static const Color statusWarning = Color(0xFFF59E0B);
   static const Color statusDanger = Color(0xFFEF4444);
   static const Color statusNeutral = Color(0xFF64748B);
+
+  // Status background tints
+  static const Color statusSafeBg = Color(0xFFE8FDF0);
+  static const Color statusWarningBg = Color(0xFFFEF9C3);
+  static const Color statusDangerBg = Color(0xFFFEE2E2);
 
   // Surface tinted untuk kartu fitur
   static const Color foodCheckCardTint = Color(0xFFE8FDF6);
@@ -42,4 +47,14 @@ abstract final class AppColors {
 
   // Shadow
   static const Color shadow = Color(0x1A081426);
+
+  // ── Alias untuk modul Atur (TASK-05) ─────────────────────────
+  /// Alias: warna primer Kura AI (toska).
+  static const Color primaryTeal = electricTeal;
+  /// Alias: warna hijau forest (hijau tua).
+  static const Color forestGreen = Color(0xFF2E7D32);
+  /// Alias: border tipis netral.
+  static const Color borderLight = divider;
+  /// Alias: latar belakang layar utama (soft white).
+  static const Color backgroundWhite = offWhite;
 }

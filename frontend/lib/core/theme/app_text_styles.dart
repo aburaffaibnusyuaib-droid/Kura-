@@ -80,4 +80,29 @@ abstract final class AppTextStyles {
         color: AppColors.textSecondary,
         height: 1.4,
       );
+
+  // ── Alias tambahan untuk modul Atur (TASK-05) ────────────────
+  /// Alias: titleSmall (≈ 13px semi-bold).
+  static TextStyle get titleSmall => GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+        height: 1.4,
+      );
+
+  /// Alias: labelMedium (≈ 12px medium).
+  static TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textPrimary,
+        height: 1.4,
+      );
+
+  /// Alias: caption (≈ 11px regular).
+  static TextStyle get caption => GoogleFonts.plusJakartaSans(
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+        color: AppColors.textSecondary,
+        height: 1.4,
+      );
 }

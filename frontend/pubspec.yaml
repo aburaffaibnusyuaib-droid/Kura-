@@ -13,6 +13,12 @@ dependencies:
   flutter_riverpod: ^2.6.1
   go_router: ^14.6.2
   google_fonts: ^6.2.1
+  camera: ^0.12.1
+  permission_handler: ^11.3.1
+  image_picker: ^1.2.4
+
+dependency_overrides:
+  permission_handler_android: 13.0.1
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +29,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/mascot_home.png
-    - assets/images/il_food_check.png
-    - assets/images/il_zero_waste.png
+    - assets/images/
