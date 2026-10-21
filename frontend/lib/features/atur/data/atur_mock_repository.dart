@@ -149,4 +149,9 @@ final class AturMockRepository implements AturRepository {
     // PRODUCT_SPEC constraint: selalu kembalikan tepat 3 resep.
     return List.unmodifiable(_dummyRecipes);
   }
+
+  @override
+  Future<bool> saveRecipe(Recipe recipe) async {
+    return true;
+  }
 }

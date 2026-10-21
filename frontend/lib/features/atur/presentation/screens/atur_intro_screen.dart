@@ -1,32 +1,98 @@
-// TASK-05: SUBTASK-05A — Atur Intro Screen (Mockup 01 & 02)
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../widgets/atur_workflow_stepper_card.dart';
 
+/// Halaman Intro / Hub Atur Makanan (Mockup 01 Refactored).
 class AturIntroScreen extends StatelessWidget {
   const AturIntroScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: AppConstants.horizontalPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildHeader(context),
-              _buildBanner(context),
-              const SizedBox(height: 24),
-              _buildStepsSection(context),
-              const SizedBox(height: 24),
-              _buildCTA(context),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppConstants.space12),
+
+              // ── Top Header dengan Avatar Profil ────────────────
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: AppColors.electricTeal,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.eco_rounded,
+                      color: AppColors.deepMidnightNavy,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.space8),
+                  Text('Kura AI', style: AppTextStyles.headlineMedium),
+                  const Spacer(),
+                  // Avatar Profil Kanan Atas
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.electricTeal.withAlpha(35),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: AppColors.deepMidnightNavy,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppConstants.space16),
+
+              // ── Judul & Tagline Atur ────────────────────────────
+              Text(
+                'Atur Makanan',
+                style: AppTextStyles.displayMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Ubah sisa bahan makanan di kulkas menjadi hidangan lezat zero-waste.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.space20),
+
+              // ── Banner Ilustrasi Zero Waste ─────────────────────
+              _buildIllustrationBanner(),
+
+              const SizedBox(height: AppConstants.space16),
+
+              // ── Tombol CTA Utama Tepat di Bawah Banner ──────────
+              _buildMainCTAButton(context),
+
+              const SizedBox(height: AppConstants.space24),
+
+              // ── Kartu Cara Kerja Tunggal (Single Container) ────
+              const AturWorkflowStepperCard(),
+
+              const SizedBox(height: AppConstants.space32),
             ],
           ),
         ),
@@ -34,98 +100,84 @@ class AturIntroScreen extends StatelessWidget {
     );
   }
 
-  // ── Header ────────────────────────────────────────────────────
-
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildIllustrationBanner() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primaryTeal,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Atur Makanan',
-                style: AppTextStyles.titleMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                'Zero Waste & Resep Cerdas',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Banner ────────────────────────────────────────────────────
-
-  Widget _buildBanner(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 180,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
-          colors: [AppColors.primaryTeal, AppColors.forestGreen],
+          colors: [
+            const Color(0xFFC8F5E9),
+            const Color(0xFFE2F9F2),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Ilustrasi banner
+            // Ilustrasi Kanan
             Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 160,
+              right: 8,
+              top: 10,
+              bottom: 10,
+              width: 155,
               child: Image.asset(
                 'assets/images/il_zero_waste.png',
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(),
               ),
             ),
-            // Teks overlay
+            // Tagline Kiri
             Positioned(
               left: 20,
               top: 0,
               bottom: 0,
+              right: 150,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Kurangi\nSisa Makanan',
-                    style: AppTextStyles.titleLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      height: 1.2,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.electricTeal,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'ZERO WASTE',
+                      style: AppTextStyles.caption.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 9,
+                        color: AppColors.deepMidnightNavy,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bahan di kulkas → Resep lezat!',
+                    'Kurangi\nSisa Pangan',
+                    style: AppTextStyles.headlineLarge.copyWith(
+                      color: AppColors.deepMidnightNavy,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Bahan di kulkas siap diolah!',
                     style: AppTextStyles.caption.copyWith(
-                      color: Colors.white.withAlpha(220),
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -137,142 +189,31 @@ class AturIntroScreen extends StatelessWidget {
     );
   }
 
-  // ── Langkah cara kerja ────────────────────────────────────────
-
-  Widget _buildStepsSection(BuildContext context) {
-    const steps = [
-      _StepData(
-        icon: Icons.camera_alt_rounded,
-        title: '1. Foto Bahan',
-        subtitle: 'Ambil foto bahan makanan yang ada',
-        color: Color(0xFF4DB6AC),
-      ),
-      _StepData(
-        icon: Icons.auto_awesome_rounded,
-        title: '2. AI Deteksi',
-        subtitle: 'Kura AI mengenali bahan secara otomatis',
-        color: Color(0xFF66BB6A),
-      ),
-      _StepData(
-        icon: Icons.tune_rounded,
-        title: '3. Edit & Pilih',
-        subtitle: 'Sesuaikan daftar bahan sesuai kebutuhan',
-        color: Color(0xFFFFB74D),
-      ),
-      _StepData(
-        icon: Icons.restaurant_menu_rounded,
-        title: '4. Dapatkan Resep',
-        subtitle: '3 resep zero-waste siap disajikan',
-        color: Color(0xFFEF5350),
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Cara Kerja',
-            style: AppTextStyles.titleSmall.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.5,
-            children: steps.map((s) => _StepCard(data: s)).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── CTA ───────────────────────────────────────────────────────
-
-  Widget _buildCTA(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ElevatedButton.icon(
-        onPressed: () => context.push(AppRoutes.aturCamera),
-        icon: const Icon(Icons.camera_alt_rounded, size: 20),
-        label: const Text('Mulai Sekarang'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryTeal,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          minimumSize: const Size(double.infinity, 52),
+  Widget _buildMainCTAButton(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        context.push(AppRoutes.aturCamera);
+      },
+      icon: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 22),
+      label: Text(
+        'Mulai Sekarang',
+        style: AppTextStyles.labelLarge.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
         ),
       ),
-    );
-  }
-}
-
-// ── Helper data class ─────────────────────────────────────────
-
-class _StepData {
-  const _StepData({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-}
-
-class _StepCard extends StatelessWidget {
-  const _StepCard({required this.data});
-
-  final _StepData data;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: data.color.withAlpha(20),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: data.color.withAlpha(60)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(data.icon, color: data.color, size: 24),
-          const SizedBox(height: 6),
-          Text(
-            data.title,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: data.color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            data.subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF00CBA7),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        minimumSize: const Size(double.infinity, 54),
+        elevation: 3,
+        shadowColor: const Color(0x4000CBA7),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }

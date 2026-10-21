@@ -5,13 +5,17 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/atur_mock_repository.dart';
+import '../../../../core/services/service_providers.dart';
+import '../../data/atur_hybrid_repository.dart';
 import '../../data/atur_repository.dart';
 import '../../domain/atur_models.dart';
 
-/// Provider untuk repository (dapat di-override di test).
+/// Provider untuk repository hybrid (Live Gemini + Dynamic Fallback).
 final aturRepositoryProvider = Provider<AturRepository>(
-  (ref) => AturMockRepository(),
+  (ref) => AturHybridRepository(
+    geminiService: ref.watch(geminiServiceProvider),
+    supabaseService: ref.watch(supabaseClientProvider),
+  ),
 );
 
 /// StateNotifier utama modul Atur.
@@ -137,11 +141,30 @@ class AturNotifier extends StateNotifier<AturState> {
     }
   }
 
-  // ── Detail Resep ──────────────────────────────────────────────
+  // ── Detail & Simpan Resep (Offline-First) ─────────────────────
 
   void selectRecipe(Recipe recipe) {
     HapticFeedback.lightImpact();
-    state = state.copyWith(selectedRecipe: recipe);
+    final isSaved = state.savedRecipeIds.contains(recipe.id) || recipe.isSaved;
+    state = state.copyWith(selectedRecipe: recipe.copyWith(isSaved: isSaved));
+  }
+
+  Future<bool> saveRecipe(Recipe recipe) async {
+    HapticFeedback.lightImpact();
+    final updatedSavedIds = Set<String>.from(state.savedRecipeIds)..add(recipe.id);
+    final updatedRecipe = recipe.copyWith(isSaved: true);
+
+    final updatedRecipes = state.recipes.map((r) {
+      return r.id == recipe.id ? updatedRecipe : r;
+    }).toList();
+
+    state = state.copyWith(
+      savedRecipeIds: updatedSavedIds,
+      selectedRecipe: updatedRecipe,
+      recipes: updatedRecipes,
+    );
+
+    return _repository.saveRecipe(recipe);
   }
 
   // ── Reset ─────────────────────────────────────────────────────

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/food_check_models.dart';
 import '../controllers/food_check_controller.dart';
-import '../widgets/food_check_banner.dart';
-import '../widgets/food_type_card.dart';
 import '../widgets/demo_scenario_sheet.dart';
+import '../widgets/food_check_banner.dart';
+import '../widgets/food_check_guides_section.dart';
+import '../widgets/food_type_card.dart';
+import '../widgets/recent_scans_section.dart';
 
-/// Halaman Hub Utama Food Check (Mockup 01 & 02).
+/// Halaman Hub Utama Food Check (Refactored & Polished).
 class FoodCheckHomeScreen extends ConsumerWidget {
   const FoodCheckHomeScreen({super.key});
 
@@ -23,17 +26,18 @@ class FoodCheckHomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
+        child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          slivers: [
-            // App Bar
-            SliverToBoxAdapter(
-              child: Padding(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Top Header ─────────────────────────────────────
+              Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppConstants.horizontalPadding,
                   AppConstants.space16,
                   AppConstants.space8,
-                  AppConstants.space16,
+                  AppConstants.space8,
                 ),
                 child: Row(
                   children: [
@@ -53,7 +57,7 @@ class FoodCheckHomeScreen extends ConsumerWidget {
                     const SizedBox(width: AppConstants.space8),
                     Text('Kura AI', style: AppTextStyles.headlineMedium),
                     const Spacer(),
-                    // Tombol Simulasi Demo (Pengujian 14 Mockup)
+                    // Tombol Simulasi Demo (Skenario)
                     IconButton(
                       icon: const Icon(Icons.tune_rounded, color: AppColors.electricTeal),
                       tooltip: 'Pilih Skenario Demo',
@@ -75,66 +79,61 @@ class FoodCheckHomeScreen extends ConsumerWidget {
                         );
                       },
                     ),
-                    // Icon Profil
-                    IconButton(
-                      icon: const Icon(
-                        Icons.person_outline_rounded,
-                        color: AppColors.textPrimary,
-                        size: 28,
+                    // Avatar Profil
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.electricTeal.withAlpha(35),
+                        shape: BoxShape.circle,
                       ),
-                      tooltip: 'Profil',
-                      onPressed: () {},
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: AppColors.deepMidnightNavy,
+                        size: 22,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-            // Judul & Deskripsi Header
-            SliverToBoxAdapter(
-              child: Padding(
+              // ── Title & Subtitle ──────────────────────────────
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.horizontalPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Food Check', style: AppTextStyles.displayMedium),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      'Periksa keamanan makanan dengan AI, barcode, dan inspeksi visual.',
+                      'Periksa keamanan makanan dengan AI & inspeksi visual.',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
-                        height: 1.4,
+                        height: 1.35,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppConstants.space24)),
+              const SizedBox(height: AppConstants.space16),
 
-            // Banner Interaktif Mulai Pemeriksaan (Mockup 01)
-            SliverToBoxAdapter(
-              child: FoodCheckBanner(
+              // ── Banner Utama Mulai Pemeriksaan ─────────────────
+              FoodCheckBanner(
                 onStartTap: () => context.push(AppRoutes.foodCheckScan),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppConstants.space24)),
+              const SizedBox(height: AppConstants.space20),
 
-            // Section: Pilih Jenis Makanan
-            SliverToBoxAdapter(
-              child: Padding(
+              // ── Section: Pilih Jenis Makanan ───────────────────
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.horizontalPadding),
                 child: Text('Pilih Jenis Makanan', style: AppTextStyles.headlineLarge),
               ),
-            ),
+              const SizedBox(height: AppConstants.space12),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppConstants.space12)),
-
-            // Dua Kartu Jenis Makanan (Makanan Kemasan & Makanan Segar)
-            SliverToBoxAdapter(
-              child: Padding(
+              // Dua Kartu Kategori Sejajar
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppConstants.horizontalPadding),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,10 +160,20 @@ class FoodCheckHomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppConstants.space32)),
-          ],
+              const SizedBox(height: AppConstants.space24),
+
+              // ── Section: Riwayat Cek Terakhir ──────────────────
+              const RecentScansSection(),
+
+              const SizedBox(height: AppConstants.space24),
+
+              // ── Section: Panduan Cepat Kura AI ─────────────────
+              const FoodCheckGuidesSection(),
+
+              const SizedBox(height: AppConstants.space32),
+            ],
+          ),
         ),
       ),
     );

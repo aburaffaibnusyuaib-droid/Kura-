@@ -1,6 +1,3 @@
-// TASK-05: SUBTASK-05D — Atur Ingredient Selection Screen (Mockup 06 & 09)
-// Pengguna bisa toggle, hapus, dan tambah bahan sebelum generate resep.
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,8 +7,9 @@ import '../../../../core/constants/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/atur_controller.dart';
-import '../widgets/ingredient_chip.dart';
+import '../widgets/ingredient_grid_card.dart';
 
+/// Layar Pemilihan Bahan Makanan Berbasis 2-Column Grid (Mockup 09).
 class AturIngredientSelectionScreen extends ConsumerStatefulWidget {
   const AturIngredientSelectionScreen({super.key});
 
@@ -36,7 +34,8 @@ class _AturIngredientSelectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih minimal 1 bahan terlebih dahulu'),
-          backgroundColor: Color(0xFF4DB6AC),
+          backgroundColor: Color(0xFF00CBA7),
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -51,12 +50,12 @@ class _AturIngredientSelectionScreenState
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Tambah Bahan'),
+        title: const Text('Tambah Bahan Manual'),
         content: TextField(
           controller: _addCtrl,
           autofocus: true,
           decoration: const InputDecoration(
-            hintText: 'Nama bahan (mis. Bayam)',
+            hintText: 'Nama bahan (mis. Bayam, Tempe)',
             border: OutlineInputBorder(),
           ),
           textCapitalization: TextCapitalization.words,
@@ -70,7 +69,7 @@ class _AturIngredientSelectionScreenState
           ElevatedButton(
             onPressed: _submitAdd,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryTeal,
+              backgroundColor: const Color(0xFF00CBA7),
               foregroundColor: Colors.white,
             ),
             child: const Text('Tambah'),
@@ -94,76 +93,148 @@ class _AturIngredientSelectionScreenState
     final selectedCount = state.selectedIngredients.length;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
+            // ── Top Navigation Bar ──────────────────────────────
             _buildHeader(context, selectedCount),
+
+            // ── Main Content Grid ───────────────────────────────
             Expanded(
-              child: SingleChildScrollView(
+              child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDemoNote(),
-                    const SizedBox(height: 16),
-                    _buildSectionTitle(
-                      'Bahan Terdeteksi AI',
-                      subtitle: '⚠️ Verifikasi ulang sebelum digunakan',
-                    ),
-                    const SizedBox(height: 12),
-                    if (ingredients.isEmpty)
-                      _buildEmptyState()
-                    else
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: ingredients.map((ing) {
-                          return IngredientChip(
-                            ingredient: ing,
-                            onToggle: () => ref
-                                .read(aturControllerProvider.notifier)
-                                .toggleIngredient(ing.id),
-                            onRemove: () => ref
-                                .read(aturControllerProvider.notifier)
-                                .removeIngredient(ing.id),
-                          );
-                        }).toList(),
+                slivers: [
+                  // Title & Subtitle Section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Bahan Terdeteksi',
+                                style: AppTextStyles.headlineLarge.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _showAddDialog,
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  size: 18,
+                                  color: Color(0xFF00CBA7),
+                                ),
+                                label: Text(
+                                  'Tambah',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: const Color(0xFF00CBA7),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Pilih bahan yang ingin kamu olah hari ini:',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                    const SizedBox(height: 20),
-                    _buildAddButton(),
-                    const SizedBox(height: 16),
-                    if (selectedCount > 0) _buildSelectionSummary(selectedCount),
-                  ],
-                ),
+                    ),
+                  ),
+
+                  // 2-Column Grid Card
+                  if (ingredients.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          'Tidak ada bahan terdeteksi.',
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.82,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final ing = ingredients[index];
+                            return IngredientGridCard(
+                              ingredient: ing,
+                              onToggle: () => ref
+                                  .read(aturControllerProvider.notifier)
+                                  .toggleIngredient(ing.id),
+                            );
+                          },
+                          childCount: ingredients.length,
+                        ),
+                      ),
+                    ),
+
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 24),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-      // ── Bottom CTA ─────────────────────────────────────────────
+
+      // ── Sticky Bottom Button: Lanjut ke Rekomendasi ────────────
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadow,
+                blurRadius: 10,
+                offset: Offset(0, -3),
+              ),
+            ],
+            border: Border(top: BorderSide(color: AppColors.divider)),
+          ),
           child: ElevatedButton.icon(
-            onPressed: _generateRecipes,
+            onPressed: selectedCount > 0 ? _generateRecipes : null,
             icon: const Icon(Icons.restaurant_menu_rounded, size: 20),
             label: Text(
               selectedCount > 0
-                  ? 'Cari Resep ($selectedCount bahan)'
-                  : 'Pilih Bahan Dulu',
+                  ? 'Lanjut ke Rekomendasi ($selectedCount Bahan)'
+                  : 'Pilih Minimal 1 Bahan',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: selectedCount > 0
-                  ? AppColors.primaryTeal
-                  : AppColors.textSecondary,
+              backgroundColor: const Color(0xFF00CBA7),
               foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade300,
+              disabledForegroundColor: Colors.grey.shade600,
               minimumSize: const Size(double.infinity, 52),
+              elevation: selectedCount > 0 ? 3 : 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              textStyle:
-                  AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700),
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -173,22 +244,27 @@ class _AturIngredientSelectionScreenState
 
   Widget _buildHeader(BuildContext context, int selectedCount) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.pop();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.offWhite,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -196,118 +272,20 @@ class _AturIngredientSelectionScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bahan Terdeteksi',
-                  style: AppTextStyles.titleSmall.copyWith(
+                  'Hasil Deteksi Bahan',
+                  style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
-                  '$selectedCount bahan dipilih',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.primaryTeal),
+                  '$selectedCount bahan dipilih untuk dimasak',
+                  style: AppTextStyles.caption.copyWith(
+                    color: const Color(0xFF00CBA7),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDemoNote() {
-    return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF66BB6A).withAlpha(60)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.science_rounded, color: Color(0xFF388E3C), size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '[DEMO] Data bahan adalah simulasi. Hasil AI hanya sebagai saran.',
-              style: AppTextStyles.caption.copyWith(color: const Color(0xFF388E3C)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, {String? subtitle}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.titleSmall.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        if (subtitle != null)
-          Text(
-            subtitle,
-            style: AppTextStyles.caption
-                .copyWith(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'Belum ada bahan. Tambahkan secara manual.',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.bodyMedium
-              .copyWith(color: AppColors.textSecondary),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddButton() {
-    return OutlinedButton.icon(
-      onPressed: _showAddDialog,
-      icon: const Icon(Icons.add_rounded, size: 18),
-      label: const Text('Tambah Bahan Manual'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primaryTeal,
-        side: BorderSide(color: AppColors.primaryTeal),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      ),
-    );
-  }
-
-  Widget _buildSelectionSummary(int count) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primaryTeal.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryTeal.withAlpha(60)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle_outline_rounded,
-              color: Color(0xFF4DB6AC), size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '$count bahan siap diproses menjadi 3 rekomendasi resep',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primaryTeal,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
         ],

@@ -2,6 +2,7 @@
 // [DEMO] Menguji business logic controller dan mock repository.
 
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kura_ai/features/atur/data/atur_mock_repository.dart';
@@ -12,6 +13,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
+    dotenv.loadFromString(
+      envString: 'GEMINI_API_KEY=test\nSUPABASE_URL=test\nSUPABASE_ANON_KEY=test\n',
+      isOptional: true,
+    );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
       SystemChannels.platform,
@@ -84,7 +89,11 @@ void main() {
     late AturNotifier notifier;
 
     setUp(() {
-      container = ProviderContainer();
+      container = ProviderContainer(
+        overrides: [
+          aturRepositoryProvider.overrideWithValue(AturMockRepository()),
+        ],
+      );
       notifier = container.read(aturControllerProvider.notifier);
     });
 
@@ -187,6 +196,17 @@ void main() {
         container.read(aturControllerProvider).selectedRecipe?.id,
         equals(recipe.id),
       );
+    });
+
+    test('saveRecipe adds recipe id to savedRecipeIds and marks recipe as saved', () async {
+      await notifier.analyzeIngredients();
+      await notifier.generateRecipes();
+      final recipe = container.read(aturControllerProvider).recipes.first;
+      final success = await notifier.saveRecipe(recipe);
+      expect(success, isTrue);
+      final state = container.read(aturControllerProvider);
+      expect(state.savedRecipeIds.contains(recipe.id), isTrue);
+      expect(state.selectedRecipe?.isSaved, isTrue);
     });
 
     test('reset clears all state', () async {

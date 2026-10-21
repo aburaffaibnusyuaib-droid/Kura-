@@ -1,6 +1,5 @@
-// TASK-05: SUBTASK-05D — Recipe Recommendations Screen (Mockup 07)
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/atur_controller.dart';
 import '../widgets/recipe_card.dart';
 
+/// Layar Daftar Rekomendasi Resep Zero-Waste (Mockup 08 Refactored).
 class RecipeRecommendationsScreen extends ConsumerWidget {
   const RecipeRecommendationsScreen({super.key});
 
@@ -17,41 +17,99 @@ class RecipeRecommendationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(aturControllerProvider);
     final recipes = state.recipes;
+    final selectedCount = state.selectedIngredients.length;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context, ref, state.selectedIngredients.length),
+            // ── Top Bar ──────────────────────────────────────────
+            _buildHeader(context, selectedCount),
+
+            // ── Main Recipe List ─────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDemoNote(),
+                    // Subtitle & Badge
+                    Row(
+                      children: [
+                        Text(
+                          'Ditemukan ',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '${recipes.length} Resep Terpilih',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: const Color(0xFF00CBA7),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00CBA7).withAlpha(25),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.eco_rounded,
+                                color: Color(0xFF00CBA7),
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Zero Waste',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: const Color(0xFF00CBA7),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
-                    _buildSubtitle(recipes.length),
-                    const SizedBox(height: 12),
+
+                    // Daftar Kartu Resep
                     if (recipes.isEmpty)
-                      _buildLoadingState()
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(48),
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF00CBA7),
+                          ),
+                        ),
+                      )
                     else
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: recipes.length,
-                        itemBuilder: (ctx, i) => RecipeCard(
-                          recipe: recipes[i],
-                          index: i,
-                          onTap: () {
-                            ref
-                                .read(aturControllerProvider.notifier)
-                                .selectRecipe(recipes[i]);
-                            context.push(AppRoutes.aturRecipeDetail);
-                          },
-                        ),
+                        itemBuilder: (context, index) {
+                          final recipe = recipes[index];
+                          return RecipeCard(
+                            recipe: recipe,
+                            index: index,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              ref
+                                  .read(aturControllerProvider.notifier)
+                                  .selectRecipe(recipe);
+                              context.push(AppRoutes.aturRecipeDetail);
+                            },
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -63,28 +121,29 @@ class RecipeRecommendationsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(
-    BuildContext context,
-    WidgetRef ref,
-    int ingredientCount,
-  ) {
+  Widget _buildHeader(BuildContext context, int ingredientCount) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.pop(),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.pop();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.offWhite,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -93,99 +152,22 @@ class RecipeRecommendationsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Rekomendasi Resep',
-                  style: AppTextStyles.titleSmall.copyWith(
+                  style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   'Dari $ingredientCount bahan pilihanmu',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.primaryTeal),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primaryTeal.withAlpha(20),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.eco_rounded,
-                    color: AppColors.primaryTeal, size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  'Zero Waste',
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primaryTeal,
-                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF00CBA7),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDemoNote() {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.science_rounded, color: Color(0xFF388E3C), size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '[DEMO] Resep bersifat simulasi — bukan hasil AI live.',
-              style: AppTextStyles.caption
-                  .copyWith(color: const Color(0xFF388E3C)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubtitle(int count) {
-    return Row(
-      children: [
-        Text(
-          'Ditemukan ',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          '$count resep',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.primaryTeal,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          ' untukmu',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(48),
-        child: CircularProgressIndicator(),
       ),
     );
   }
