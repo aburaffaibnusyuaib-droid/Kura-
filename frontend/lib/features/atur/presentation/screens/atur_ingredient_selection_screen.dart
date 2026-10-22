@@ -75,14 +75,53 @@ class _AturIngredientSelectionScreenState
 
     if (mounted) {
       final recipes = ref.read(aturControllerProvider).recipes;
+      final errorMsg = ref.read(aturControllerProvider).errorMessage;
       if (recipes.isNotEmpty) {
         context.push(AppRoutes.aturRecipes);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal membuat resep. Periksa koneksi internet Anda.'),
-            backgroundColor: AppColors.statusDanger,
-            behavior: SnackBarBehavior.floating,
+        showDialog<void>(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: AppColors.statusWarning),
+                SizedBox(width: 8),
+                Text(
+                  'Gagal Membuat Resep',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Text(
+              errorMsg != null && errorMsg.toLowerCase().contains('timeout')
+                  ? 'Waktu pembuatan resep habis (timeout). Server AI membutuhkan waktu lebih lama. Silakan coba kembali.'
+                  : (errorMsg ??
+                      'Kura AI tidak dapat menyelesaikan racikan resep saat ini. Periksa koneksi internet Anda.'),
+              style: const TextStyle(fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(dialogCtx);
+                  _generateRecipes();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00CBA7),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Coba Lagi'),
+              ),
+            ],
           ),
         );
       }

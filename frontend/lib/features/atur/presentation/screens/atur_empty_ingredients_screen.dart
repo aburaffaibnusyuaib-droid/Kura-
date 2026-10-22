@@ -16,6 +16,39 @@ class AturEmptyIngredientsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(aturControllerProvider);
+    final errorMsg = state.errorMessage ?? '';
+    final hasError = errorMsg.isNotEmpty;
+    final isTimeout = errorMsg.toLowerCase().contains('timeout') ||
+        errorMsg.toLowerCase().contains('waktu');
+    final isNetwork = errorMsg.toLowerCase().contains('socket') ||
+        errorMsg.toLowerCase().contains('network') ||
+        errorMsg.toLowerCase().contains('koneksi');
+
+    final String title;
+    final String description;
+
+    if (hasError) {
+      if (isTimeout) {
+        title = 'Waktu Analisis Habis';
+        description =
+            'Proses deteksi bahan memerlukan waktu lebih lama dari biasanya. Silakan coba analisis lagi.';
+      } else if (isNetwork) {
+        title = 'Koneksi Terganggu';
+        description =
+            'Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.';
+      } else {
+        title = 'Kendala Layanan AI';
+        description = errorMsg;
+      }
+    } else {
+      title = 'Ups, Bahan Tidak Terdeteksi';
+      description =
+          'Kura AI tidak dapat mengenali bahan dari foto ini. '
+          'Coba foto ulang dengan pencahayaan lebih terang atau '
+          'bahan lebih terlihat jelas.';
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
@@ -30,7 +63,7 @@ class AturEmptyIngredientsScreen extends ConsumerWidget {
                 const MascotConfusedPlaceholder(size: 140),
                 const SizedBox(height: 28),
                 Text(
-                  'Ups, Bahan Tidak Terdeteksi',
+                  title,
                   style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -39,18 +72,36 @@ class AturEmptyIngredientsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Kura AI tidak dapat mengenali bahan dari foto ini. '
-                  'Coba foto ulang dengan pencahayaan lebih terang atau '
-                  'bahan lebih terlihat jelas.',
+                  description,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 32),
-                // Tips
-                _buildTipsCard(),
-                const SizedBox(height: 32),
+                if (!hasError) ...[
+                  // Tips
+                  _buildTipsCard(),
+                  const SizedBox(height: 32),
+                ] else ...[
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.pushReplacement(AppRoutes.aturAnalyzing);
+                    },
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Coba Lagi Analisis'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryTeal,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      textStyle: AppTextStyles.labelLarge
+                          .copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 // Tombol aksi
                 ElevatedButton.icon(
                   onPressed: () {
@@ -60,9 +111,16 @@ class AturEmptyIngredientsScreen extends ConsumerWidget {
                   icon: const Icon(Icons.camera_alt_rounded, size: 18),
                   label: const Text('Foto Ulang'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryTeal,
-                    foregroundColor: Colors.white,
+                    backgroundColor: hasError
+                        ? AppColors.cardBackground
+                        : AppColors.primaryTeal,
+                    foregroundColor:
+                        hasError ? AppColors.textPrimary : Colors.white,
                     minimumSize: const Size(double.infinity, 52),
+                    elevation: hasError ? 0 : 2,
+                    side: hasError
+                        ? BorderSide(color: AppColors.divider)
+                        : null,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     textStyle: AppTextStyles.labelLarge

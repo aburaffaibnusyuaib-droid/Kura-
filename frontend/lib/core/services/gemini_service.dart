@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -25,6 +26,18 @@ class GeminiService {
   ];
 
   static const Map<String, String> _ingredientImageMap = {
+    'bawang bombay':
+        'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&q=80',
+    'bawang putih':
+        'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=400&q=80',
+    'bawang merah':
+        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
+    'tepung':
+        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+    'cabai':
+        'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80',
+    'bengkuang':
+        'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=400&q=80',
     'tomato':
         'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&q=80',
     'tomat':
@@ -41,24 +54,14 @@ class GeminiService {
         'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&q=80',
     'lettuce':
         'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&q=80',
-    'cabai':
-        'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80',
     'cabe':
         'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80',
     'chili':
         'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80',
-    'bawang merah':
-        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
     'shallot':
         'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
-    'bawang putih':
-        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
     'garlic':
-        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
-    'bawang':
-        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
-    'onion':
-        'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80',
+        'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=400&q=80',
     'ayam':
         'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&q=80',
     'chicken':
@@ -103,17 +106,50 @@ class GeminiService {
         'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=400&q=80',
   };
 
-  // ── Helper: Map Image URL ─────────────────────────────────────
+  /// Helper: Map Image URL dengan prioritas compound phrase agar tidak salah tangkap substring
   static String mapIngredientImageUrl(String keyword, String name) {
     final lowerKey = keyword.toLowerCase().trim();
     final lowerName = name.toLowerCase().trim();
+    final combined = '$lowerKey $lowerName';
 
+    // 1. Specific multi-word compounds first to avoid broad substring matching
+    if (combined.contains('bombay') || combined.contains('yellow onion')) {
+      return _ingredientImageMap['bawang bombay']!;
+    }
+    if (combined.contains('bawang putih') || combined.contains('garlic')) {
+      return _ingredientImageMap['bawang putih']!;
+    }
+    if (combined.contains('bawang merah') ||
+        combined.contains('shallot') ||
+        combined.contains('red onion')) {
+      return _ingredientImageMap['bawang merah']!;
+    }
+    if (combined.contains('tepung') ||
+        combined.contains('flour') ||
+        combined.contains('krispi')) {
+      return _ingredientImageMap['tepung']!;
+    }
+    if (combined.contains('cabai') ||
+        combined.contains('cabe') ||
+        combined.contains('chili') ||
+        combined.contains('paprika')) {
+      return _ingredientImageMap['cabai']!;
+    }
+    if (combined.contains('bengkuang') ||
+        combined.contains('jicama') ||
+        combined.contains('lobak')) {
+      return _ingredientImageMap['bengkuang']!;
+    }
+
+    // 2. Exact word / substring checks for single keywords
     for (final entry in _ingredientImageMap.entries) {
-      if (lowerKey.contains(entry.key) || lowerName.contains(entry.key)) {
+      if (combined.contains(entry.key)) {
         return entry.value;
       }
     }
-    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80';
+
+    // 3. Clean neutral fallback (papan potong bahan segar estetik)
+    return 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=400&q=80';
   }
 
   static String mapRecipeImageUrl(String title, String description) {
@@ -134,6 +170,7 @@ class GeminiService {
   }
 
   /// Eksekusi POST request ke Gemini dengan fallback otomatis jika model 503/404
+  /// Timeout diperluas hingga 35 detik agar aman untuk mobile network dan generasi resep komprehensif.
   Future<String> _postGenerateContent(Map<String, dynamic> payload) async {
     if (apiKey.trim().isEmpty) {
       throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
@@ -152,21 +189,28 @@ class GeminiService {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode(payload),
             )
-            .timeout(const Duration(seconds: 14));
+            .timeout(const Duration(seconds: 35));
 
         if (response.statusCode == 200) {
           return response.body;
         }
 
         lastError = 'Gemini ($model) status ${response.statusCode}: ${response.body}';
-        // Lanjutkan mencoba model berikutnya jika 503 atau 404
+        // Lanjutkan mencoba model berikutnya jika 503 (high demand) atau 404 (sunset)
         if (response.statusCode == 503 || response.statusCode == 404) {
           continue;
         } else {
           break;
         }
+      } on TimeoutException {
+        lastError = 'Waktu permintaan ke Gemini ($model) habis (timeout)';
+        continue;
       } catch (e) {
         lastError = e.toString();
+        if (e is SocketException) {
+          // Masalah koneksi fisik, tidak perlu mencoba model lain
+          rethrow;
+        }
       }
     }
 
@@ -201,7 +245,7 @@ class GeminiService {
         'ATURAN KELUARAN (STRICT JSON FORMAT):'
         'Kembalikan HANYA JSON object tunggal dengan skema berikut tanpa tanda markdown:'
         '{\n'
-        '  "food_name": "Nama spesifik makanan dalam Bahasa Indonesia (misal: Susu UHT Cokelat, Tomat Merah)",\n'
+        '  "food_name": "Nama spesifik makanan dalam Bahasa Indonesia (misal: Susu UHT Cokelat, Tomat Merah, Bengkuang Potong)",\n'
         '  "category": "PACKAGED" atau "FRESH",\n'
         '  "status": "SAFE" (kondisi prima/segar/kemasan utuh), "WARNING" (ada cacat ringan/penyok kecil/mulai layu tapi belum busuk), "DANGER" (berjamur/kembung/busuk/berlendir/rusak parah), atau "UNCERTAIN" (makanan segar yang visualnya belum cukup untuk memastikan dan butuh pengecekan bau/tekstur),\n'
         '  "confidence_score": 0.95,\n'
@@ -322,7 +366,20 @@ class GeminiService {
     final parts = content?['parts'] as List<dynamic>?;
     final text = parts?.first['text'] as String? ?? '[]';
 
-    final parsedList = jsonDecode(text) as List<dynamic>;
+    final dynamic decoded = jsonDecode(text);
+    final List<dynamic> parsedList;
+    if (decoded is List) {
+      parsedList = decoded;
+    } else if (decoded is Map<String, dynamic>) {
+      final listVal = decoded.values.firstWhere(
+        (v) => v is List,
+        orElse: () => <dynamic>[],
+      );
+      parsedList = listVal as List<dynamic>;
+    } else {
+      parsedList = const [];
+    }
+
     return parsedList.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
       final name = item['name'] as String? ?? 'Bahan';
@@ -400,7 +457,20 @@ class GeminiService {
     final parts = content?['parts'] as List<dynamic>?;
     final text = parts?.first['text'] as String? ?? '[]';
 
-    final parsedList = jsonDecode(text) as List<dynamic>;
+    final dynamic decoded = jsonDecode(text);
+    final List<dynamic> parsedList;
+    if (decoded is List) {
+      parsedList = decoded;
+    } else if (decoded is Map<String, dynamic>) {
+      final listVal = decoded.values.firstWhere(
+        (v) => v is List,
+        orElse: () => <dynamic>[],
+      );
+      parsedList = listVal as List<dynamic>;
+    } else {
+      parsedList = const [];
+    }
+
     return parsedList.take(3).map((item) {
       final map = item as Map<String, dynamic>;
       final title = map['title'] as String? ?? map['name'] as String? ?? 'Resep Lezat';

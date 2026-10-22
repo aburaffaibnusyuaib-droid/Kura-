@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/service_providers.dart';
@@ -125,13 +126,10 @@ final class FoodCheckNotifier extends StateNotifier<FoodCheckState> {
 
   /// Menjalankan proses analisis AI dengan animasi progress dan pemanggilan Gemini Vision.
   Future<bool> startAnalysis() async {
-    if (state.isOffline) {
-      return false;
-    }
-
     state = state.copyWith(
       isAnalyzing: true,
       analysisProgress: 0.15,
+      isOffline: false,
       clearError: true,
     );
 
@@ -156,11 +154,34 @@ final class FoodCheckNotifier extends StateNotifier<FoodCheckState> {
         result: res,
       );
       return true;
-    } catch (e) {
+    } on TimeoutException {
+      state = state.copyWith(
+        isAnalyzing: false,
+        isOffline: false,
+        errorMessage:
+            'Waktu analisis AI habis (timeout). Server AI membutuhkan waktu respon lebih lama. Silakan coba lagi.',
+      );
+      return false;
+    } on SocketException {
       state = state.copyWith(
         isAnalyzing: false,
         isOffline: true,
-        errorMessage: 'Gagal terhubung ke AI. Periksa koneksi internet Anda.',
+        errorMessage:
+            'Tidak ada koneksi internet. Periksa jaringan Anda dan coba lagi.',
+      );
+      return false;
+    } catch (e) {
+      final errStr = e.toString();
+      final isNetwork = errStr.contains('SocketException') ||
+          errStr.toLowerCase().contains('network') ||
+          errStr.toLowerCase().contains('connection') ||
+          errStr.toLowerCase().contains('host lookup');
+      state = state.copyWith(
+        isAnalyzing: false,
+        isOffline: isNetwork,
+        errorMessage: isNetwork
+            ? 'Tidak ada koneksi internet. Periksa jaringan Anda dan coba lagi.'
+            : 'Terjadi kendala pada server AI: ${errStr.replaceAll('Exception:', '').trim()}',
       );
       return false;
     }

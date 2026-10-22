@@ -13,6 +13,75 @@ class FoodOfflineScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(foodCheckControllerProvider);
+    final errorMsg = state.errorMessage ?? '';
+    final isTimeout = errorMsg.toLowerCase().contains('timeout') ||
+        errorMsg.toLowerCase().contains('waktu');
+    final isOffline = state.isOffline;
+
+    final String title;
+    final String description;
+    final Widget iconWidget;
+
+    if (isTimeout) {
+      title = 'Waktu Analisis Habis';
+      description =
+          'AI membutuhkan waktu lebih lama untuk memproses foto. Silakan coba analisis lagi.';
+      iconWidget = Container(
+        width: 120,
+        height: 120,
+        decoration: const BoxDecoration(
+          color: AppColors.aturCardTint,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.hourglass_empty_rounded,
+          size: 60,
+          color: AppColors.sunsetOrange,
+        ),
+      );
+    } else if (!isOffline && errorMsg.isNotEmpty) {
+      title = 'Kendala Layanan AI';
+      description = errorMsg;
+      iconWidget = Container(
+        width: 120,
+        height: 120,
+        decoration: const BoxDecoration(
+          color: AppColors.foodCheckCardTint,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.cloud_off_rounded,
+          size: 60,
+          color: AppColors.sunsetOrange,
+        ),
+      );
+    } else {
+      title = 'Tidak Ada Koneksi Internet';
+      description = errorMsg.isNotEmpty
+          ? errorMsg
+          : 'Periksa koneksi internet Anda dan coba lagi.';
+      iconWidget = Image.asset(
+        'assets/images/il_no_internet.png',
+        width: 180,
+        height: 180,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 120,
+          height: 120,
+          decoration: const BoxDecoration(
+            color: AppColors.foodCheckCardTint,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.wifi_off_rounded,
+            size: 64,
+            color: AppColors.sunsetOrange,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -29,31 +98,13 @@ class FoodOfflineScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              // Ilustrasi No Internet (Mockup 13)
-              Image.asset(
-                'assets/images/il_no_internet.png',
-                width: 180,
-                height: 180,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 120,
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    color: AppColors.foodCheckCardTint,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.wifi_off_rounded,
-                    size: 64,
-                    color: AppColors.sunsetOrange,
-                  ),
-                ),
-              ),
+              // Ilustrasi Status Error Cerdas
+              iconWidget,
 
               const SizedBox(height: 32),
 
               Text(
-                'Tidak Ada Koneksi Internet',
+                title,
                 style: AppTextStyles.headlineLarge,
                 textAlign: TextAlign.center,
               ),
@@ -61,7 +112,7 @@ class FoodOfflineScreen extends ConsumerWidget {
               const SizedBox(height: 8),
 
               Text(
-                'Periksa koneksi internet Anda dan coba lagi.',
+                description,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),

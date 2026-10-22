@@ -84,7 +84,7 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> with WidgetsBin
   Future<void> _initializeController(CameraDescription cameraDescription) async {
     final controller = CameraController(
       cameraDescription,
-      ResolutionPreset.high,
+      ResolutionPreset.medium,
       enableAudio: false,
     );
     _cameraController = controller;
@@ -138,7 +138,12 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> with WidgetsBin
   Future<void> _pickFromGallery() async {
     HapticFeedback.lightImpact();
     try {
-      final picked = await _picker.pickImage(source: ImageSource.gallery);
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 80,
+      );
       if (picked != null && mounted) {
         ref.read(foodCheckControllerProvider.notifier).setCapturedImage(picked.path);
         context.push(AppRoutes.foodCheckPreview);

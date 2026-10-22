@@ -85,7 +85,7 @@ class _AturCameraScannerScreenState
   Future<void> _initializeController(CameraDescription cameraDescription) async {
     final controller = CameraController(
       cameraDescription,
-      ResolutionPreset.high,
+      ResolutionPreset.medium,
       enableAudio: false,
     );
     _cameraController = controller;
@@ -140,7 +140,9 @@ class _AturCameraScannerScreenState
   Future<void> _pickFromCamera() async {
     final picked = await _picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 85,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 80,
     );
     if (picked != null && mounted) {
       ref.read(aturControllerProvider.notifier).capturePhoto(picked.path);
@@ -152,7 +154,9 @@ class _AturCameraScannerScreenState
     HapticFeedback.lightImpact();
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 85,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 80,
     );
     if (picked != null && mounted) {
       ref.read(aturControllerProvider.notifier).capturePhoto(picked.path);
