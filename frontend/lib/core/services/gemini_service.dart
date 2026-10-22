@@ -16,9 +16,13 @@ class GeminiService {
   final String apiKey;
   final http.Client _client;
 
-  /// Endpoint Gemini 1.5 Flash untuk deteksi visi dan teks yang cepat & efisien.
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  /// Model prioritas yang didukung Google Generative Language API.
+  /// Urutan fallback otomatis jika model tertentu mengalami 503 high demand atau 404:
+  static const List<String> _modelHierarchy = [
+    'gemini-flash-lite-latest',
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
+  ];
 
   static const Map<String, String> _ingredientImageMap = {
     'tomato':
@@ -129,21 +133,56 @@ class GeminiService {
     return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
   }
 
+  /// Eksekusi POST request ke Gemini dengan fallback otomatis jika model 503/404
+  Future<String> _postGenerateContent(Map<String, dynamic> payload) async {
+    if (apiKey.trim().isEmpty) {
+      throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
+    }
+
+    String lastError = '';
+    for (final model in _modelHierarchy) {
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
+      );
+
+      try {
+        final response = await _client
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 14));
+
+        if (response.statusCode == 200) {
+          return response.body;
+        }
+
+        lastError = 'Gemini ($model) status ${response.statusCode}: ${response.body}';
+        // Lanjutkan mencoba model berikutnya jika 503 atau 404
+        if (response.statusCode == 503 || response.statusCode == 404) {
+          continue;
+        } else {
+          break;
+        }
+      } catch (e) {
+        lastError = e.toString();
+      }
+    }
+
+    throw HttpException('Gagal memproses dengan Gemini API: $lastError');
+  }
+
   // ── 1. FOOD CHECK VISION API ──────────────────────────────────
 
-  /// Mengirim foto makanan ke Gemini 1.5 Flash untuk penilaian kelayakan.
+  /// Mengirim foto makanan ke Gemini Vision untuk penilaian kelayakan.
   Future<FoodCheckResult> assessFoodCheck({
     required Uint8List imageBytes,
     required String imagePath,
     FoodType? expectedCategory,
     FreshFoodQuestionnaireAnswers? questionnaireAnswers,
   }) async {
-    if (apiKey.trim().isEmpty) {
-      throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
-    }
-
     final base64Image = base64Encode(imageBytes);
-    final url = Uri.parse('$_baseUrl?key=$apiKey');
 
     String sensoryContext = '';
     if (questionnaireAnswers != null &&
@@ -200,21 +239,9 @@ class GeminiService {
       },
     };
 
-    final response = await _client
-        .post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 12));
+    final responseBody = await _postGenerateContent(payload);
 
-    if (response.statusCode != 200) {
-      throw HttpException(
-        'Gemini API error ${response.statusCode}: ${response.body}',
-      );
-    }
-
-    final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
+    final jsonResp = jsonDecode(responseBody) as Map<String, dynamic>;
     final candidates = jsonResp['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
       throw const FormatException('Tidak ada kandidat hasil dari Gemini');
@@ -244,16 +271,11 @@ class GeminiService {
 
   // ── 2. ATUR: DETECT INGREDIENTS API ───────────────────────────
 
-  /// Mengirim foto kulkas / bahan ke Gemini 1.5 Flash untuk deteksi bahan.
+  /// Mengirim foto kulkas / bahan ke Gemini untuk deteksi bahan.
   Future<List<DetectedIngredient>> detectIngredients({
     required Uint8List imageBytes,
   }) async {
-    if (apiKey.trim().isEmpty) {
-      throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
-    }
-
     final base64Image = base64Encode(imageBytes);
-    final url = Uri.parse('$_baseUrl?key=$apiKey');
 
     const prompt =
         'Anda adalah AI pengenal bahan makanan kulkas Indonesia. '
@@ -288,21 +310,9 @@ class GeminiService {
       },
     };
 
-    final response = await _client
-        .post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 12));
+    final responseBody = await _postGenerateContent(payload);
 
-    if (response.statusCode != 200) {
-      throw HttpException(
-        'Gemini API error ${response.statusCode}: ${response.body}',
-      );
-    }
-
-    final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
+    final jsonResp = jsonDecode(responseBody) as Map<String, dynamic>;
     final candidates = jsonResp['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
       throw const FormatException('Tidak ada kandidat hasil dari Gemini');
@@ -336,15 +346,9 @@ class GeminiService {
   Future<List<Recipe>> generateZeroWasteRecipes({
     required List<DetectedIngredient> selectedIngredients,
   }) async {
-    if (apiKey.trim().isEmpty) {
-      throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
-    }
-
     final ingredientsListText = selectedIngredients
         .map((i) => '- ${i.name} (${i.quantity})')
         .join('\n');
-
-    final url = Uri.parse('$_baseUrl?key=$apiKey');
 
     final prompt =
         'Anda adalah koki profesional Indonesia spesialis gerakan Zero Waste Food. '
@@ -384,21 +388,9 @@ class GeminiService {
       },
     };
 
-    final response = await _client
-        .post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 14));
+    final responseBody = await _postGenerateContent(payload);
 
-    if (response.statusCode != 200) {
-      throw HttpException(
-        'Gemini API error ${response.statusCode}: ${response.body}',
-      );
-    }
-
-    final jsonResp = jsonDecode(response.body) as Map<String, dynamic>;
+    final jsonResp = jsonDecode(responseBody) as Map<String, dynamic>;
     final candidates = jsonResp['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
       throw const FormatException('Tidak ada kandidat hasil dari Gemini');
