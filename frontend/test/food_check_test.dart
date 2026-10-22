@@ -71,7 +71,12 @@ void main() {
 
   group('FoodCheckController Tests', () {
     test('updates selected food type and scenarios correctly', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          foodCheckRepositoryProvider
+              .overrideWithValue(const FoodCheckMockRepository()),
+        ],
+      );
       final controller = container.read(foodCheckControllerProvider.notifier);
 
       expect(container.read(foodCheckControllerProvider).selectedFoodType, FoodType.packaged);
@@ -86,7 +91,12 @@ void main() {
     });
 
     test('sets and clears captured image', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          foodCheckRepositoryProvider
+              .overrideWithValue(const FoodCheckMockRepository()),
+        ],
+      );
       final controller = container.read(foodCheckControllerProvider.notifier);
 
       controller.setCapturedImage('/path/to/test.jpg');

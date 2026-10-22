@@ -7,11 +7,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/services/service_providers.dart';
 import '../controllers/food_check_controller.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/result_info_card.dart';
 import '../widgets/ai_advice_card.dart';
-import '../widgets/demo_scenario_sheet.dart';
 
 /// Layar Tampilan Hasil Pemeriksaan Komprehensif (Mockup 06, 07, 08, 09, 11).
 class FoodResultScreen extends ConsumerWidget {
@@ -39,39 +39,23 @@ class FoodResultScreen extends ConsumerWidget {
           onPressed: () => context.go(AppRoutes.foodCheck),
         ),
         actions: [
-          // Switcher Cepat Skenario Demo
-          IconButton(
-            icon: const Icon(Icons.tune_rounded, color: AppColors.electricTeal),
-            tooltip: 'Ganti Variasi Skenario Mockup',
-            onPressed: () {
-              showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                builder: (ctx) => DemoScenarioSheet(
-                  currentScenario: state.selectedScenario,
-                  isOffline: state.isOffline,
-                  onSelectScenario: (scen) {
-                    controller.setScenario(scen);
-                    controller.startAnalysis();
-                    Navigator.pop(ctx);
-                  },
-                  onToggleOffline: (off) {
-                    controller.setOfflineState(off);
-                  },
-                ),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.bookmark_border_rounded, color: AppColors.textPrimary),
-            tooltip: 'Simpan',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Hasil pemeriksaan berhasil disimpan!'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
+            tooltip: 'Simpan ke Riwayat',
+            onPressed: () async {
+              HapticFeedback.lightImpact();
+              await ref.read(localStorageServiceProvider).saveFoodCheck(result);
+              ref.read(foodCheckHistoryProvider.notifier).refresh();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Hasil pemeriksaan berhasil disimpan ke riwayat!'),
+                    backgroundColor: AppColors.electricTeal,
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -143,14 +127,20 @@ class FoodResultScreen extends ConsumerWidget {
                     child: SizedBox(
                       height: 48,
                       child: OutlinedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           HapticFeedback.lightImpact();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Hasil disimpan ke riwayat.'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
+                          await ref.read(localStorageServiceProvider).saveFoodCheck(result);
+                          ref.read(foodCheckHistoryProvider.notifier).refresh();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Hasil berhasil disimpan ke riwayat.'),
+                                backgroundColor: AppColors.electricTeal,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         },
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.electricTeal),

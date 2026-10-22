@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
-import '../../domain/food_check_models.dart';
 import '../controllers/food_check_controller.dart';
 
 /// Layar peninjauan foto hasil jepretan sebelum diproses (Mockup 04).
@@ -121,11 +120,7 @@ class FoodPreviewScreen extends ConsumerWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           HapticFeedback.lightImpact();
-                          if (state.selectedFoodType == FoodType.fresh) {
-                            context.push(AppRoutes.foodCheckQuestionnaire);
-                          } else {
-                            context.push(AppRoutes.foodCheckAnalyzing);
-                          }
+                          context.push(AppRoutes.foodCheckAnalyzing);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.electricTeal,

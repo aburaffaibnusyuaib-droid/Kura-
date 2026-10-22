@@ -15,6 +15,7 @@ final aturRepositoryProvider = Provider<AturRepository>(
   (ref) => AturHybridRepository(
     geminiService: ref.watch(geminiServiceProvider),
     supabaseService: ref.watch(supabaseClientProvider),
+    localStorageService: ref.watch(localStorageServiceProvider),
   ),
 );
 

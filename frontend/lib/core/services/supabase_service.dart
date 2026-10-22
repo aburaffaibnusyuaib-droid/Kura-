@@ -1,8 +1,7 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Service client untuk integrasi Supabase REST API secara aman.
-/// Tidak ada kredensial hardcoded; nilai diambil dari AppConfig/dotenv.
+/// Service client untuk integrasi Supabase secara aman.
+/// Tidak ada kredensial hardcoded; konfigurasi diambil via AppConfig/dotenv.
 class SupabaseService {
   SupabaseService({
     required this.url,
@@ -14,31 +13,53 @@ class SupabaseService {
 
   bool get isConfigured => url.trim().isNotEmpty && anonKey.trim().isNotEmpty;
 
-  /// Menyimpan resep ke database Supabase (background sync).
-  Future<bool> saveRecipe(Map<String, dynamic> recipeData) async {
-    if (!isConfigured) {
-      // Offline / belum dikonfigurasi - sukses lokal
-      return false;
-    }
+  /// Supabase client instance (jika Supabase sudah diinisialisasi)
+  SupabaseClient? get _client {
+    try {
+      if (isConfigured) {
+        return Supabase.instance.client;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Memastikan status autentikasi anonim / tamu (guest auth fallback).
+  Future<void> ensureAnonymousAuth() async {
+    final client = _client;
+    if (client == null) return;
 
     try {
-      final endpoint = Uri.parse('$url/rest/v1/saved_recipes');
-      final response = await http
-          .post(
-            endpoint,
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': anonKey,
-              'Authorization': 'Bearer $anonKey',
-              'Prefer': 'return=minimal',
-            },
-            body: jsonEncode(recipeData),
-          )
-          .timeout(const Duration(seconds: 4));
+      if (client.auth.currentUser == null) {
+        await client.auth.signInAnonymously();
+      }
+    } catch (_) {
+      // Abaikan jika anonymous sign-in belum diaktifkan di dasbor Supabase atau sedang offline
+    }
+  }
 
-      return response.statusCode >= 200 && response.statusCode < 300;
+  /// Menyimpan resep ke database Supabase secara asinkron di latar belakang.
+  Future<bool> saveRecipe(Map<String, dynamic> recipeData) async {
+    final client = _client;
+    if (client == null) return false;
+
+    try {
+      await client.from('saved_recipes').insert(recipeData);
+      return true;
     } catch (_) {
       // Fail silently for background sync
+      return false;
+    }
+  }
+
+  /// Menyimpan riwayat scan Food Check ke Supabase di latar belakang (opsional).
+  Future<bool> saveFoodCheck(Map<String, dynamic> checkData) async {
+    final client = _client;
+    if (client == null) return false;
+
+    try {
+      await client.from('food_checks').insert(checkData);
+      return true;
+    } catch (_) {
       return false;
     }
   }

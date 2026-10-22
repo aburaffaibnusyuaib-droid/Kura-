@@ -207,6 +207,17 @@ class RecipeDetailScreen extends ConsumerWidget {
                           value: '${recipe.servings} porsi',
                           color: AppColors.sunsetOrange,
                         ),
+                        Container(
+                          width: 1,
+                          height: 36,
+                          color: AppColors.divider,
+                        ),
+                        _DetailMetric(
+                          icon: Icons.local_fire_department_rounded,
+                          title: 'Kalori',
+                          value: '${recipe.calories} kkal',
+                          color: Colors.deepOrange,
+                        ),
                       ],
                     ),
                   ),
@@ -288,6 +299,51 @@ class RecipeDetailScreen extends ConsumerWidget {
                       isLast: entry.key == recipe.steps.length - 1,
                     );
                   }),
+
+                  if (recipe.zeroWasteTip.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00CBA7).withAlpha(20),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF00CBA7).withAlpha(60),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.eco_rounded,
+                              color: Color(0xFF00CBA7), size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Tips Zero Waste',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF00CBA7),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  recipe.zeroWasteTip,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 28),
 

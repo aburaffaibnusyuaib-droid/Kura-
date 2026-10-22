@@ -41,8 +41,52 @@ class _AturIngredientSelectionScreenState
       return;
     }
     HapticFeedback.lightImpact();
-    await ref.read(aturControllerProvider.notifier).generateRecipes();
-    if (mounted) context.push(AppRoutes.aturRecipes);
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              SizedBox(height: 12),
+              CircularProgressIndicator(color: Color(0xFF00CBA7)),
+              SizedBox(height: 20),
+              Text(
+                'Kura AI sedang meracik 3 resep zero waste...',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      await ref.read(aturControllerProvider.notifier).generateRecipes();
+    } finally {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
+
+    if (mounted) {
+      final recipes = ref.read(aturControllerProvider).recipes;
+      if (recipes.isNotEmpty) {
+        context.push(AppRoutes.aturRecipes);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal membuat resep. Periksa koneksi internet Anda.'),
+            backgroundColor: AppColors.statusDanger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showAddDialog() {

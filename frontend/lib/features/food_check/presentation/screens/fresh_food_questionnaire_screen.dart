@@ -69,7 +69,8 @@ class _FreshFoodQuestionnaireScreenState
               storageDuration: _selectedStorage,
             ),
           );
-      context.push(AppRoutes.foodCheckAnalyzing);
+      ref.read(foodCheckControllerProvider.notifier).setCompletedQuestionnaire(true);
+      context.pushReplacement(AppRoutes.foodCheckAnalyzing);
     }
   }
 

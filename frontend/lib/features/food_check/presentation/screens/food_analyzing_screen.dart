@@ -6,6 +6,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/services/service_providers.dart';
+import '../../domain/food_check_models.dart';
 import '../controllers/food_check_controller.dart';
 
 /// Layar animasi pemrosesan AI (Mockup 05).
@@ -66,18 +68,33 @@ class _FoodAnalyzingScreenState extends ConsumerState<FoodAnalyzingScreen>
   Future<void> _executeAnalysis() async {
     final state = ref.read(foodCheckControllerProvider);
     if (state.isOffline) {
-      await Future<void>.delayed(const Duration(milliseconds: 1000));
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       if (mounted) {
         context.pushReplacement(AppRoutes.foodCheckOffline);
       }
       return;
     }
 
-    final success = await ref.read(foodCheckControllerProvider.notifier).startAnalysis();
+    final success =
+        await ref.read(foodCheckControllerProvider.notifier).startAnalysis();
 
     if (mounted) {
       if (success) {
-        context.pushReplacement(AppRoutes.foodCheckResult);
+        final result = ref.read(foodCheckControllerProvider).result;
+        final hasCompleted =
+            ref.read(foodCheckControllerProvider).hasCompletedQuestionnaire;
+
+        // Jika status UNCERTAIN pada Makanan Segar dan belum pernah isi kuesioner lanjutan
+        if (result != null &&
+            result.foodType == FoodType.fresh &&
+            result.status == FoodCheckStatus.unableToAssess &&
+            !hasCompleted) {
+          context.pushReplacement(AppRoutes.foodCheckQuestionnaire);
+        } else {
+          // Segarkan riwayat di beranda Food Check
+          ref.read(foodCheckHistoryProvider.notifier).refresh();
+          context.pushReplacement(AppRoutes.foodCheckResult);
+        }
       } else {
         context.pushReplacement(AppRoutes.foodCheckOffline);
       }
