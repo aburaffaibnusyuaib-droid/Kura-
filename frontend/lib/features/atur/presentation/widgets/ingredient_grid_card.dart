@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/atur_models.dart';
+import '../utils/food_image_resolver.dart';
 
 /// Kartu Grid Bahan Makanan dengan Foto Asli & Checkbox Toska (Mockup 09).
 class IngredientGridCard extends StatelessWidget {
@@ -44,38 +45,17 @@ class IngredientGridCard extends StatelessWidget {
                 flex: 5,
                 child: Stack(
                   children: [
-                    // Foto Bahan Asli
+                    // Foto Bahan Asli (Multi-Tier Image Resolver)
                     Positioned.fill(
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(14),
                         ),
-                        child: ingredient.imageUrl != null &&
-                                ingredient.imageUrl!.isNotEmpty
-                            ? Image.network(
-                                ingredient.imageUrl!,
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    color: const Color(0xFFF2F4F7),
-                                    child: const Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Color(0xFF00CBA7),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildFallbackImage(),
-                              )
-                            : _buildFallbackImage(),
+                        child: FoodImageWidget(
+                          imageUrl: ingredient.imageUrl,
+                          name: ingredient.name,
+                          category: ingredient.category,
+                        ),
                       ),
                     ),
 
@@ -152,18 +132,6 @@ class IngredientGridCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFallbackImage() {
-    return Container(
-      color: const Color(0xFFE8FDF6),
-      child: Center(
-        child: Text(
-          ingredient.emoji,
-          style: const TextStyle(fontSize: 42),
         ),
       ),
     );

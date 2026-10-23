@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../../features/food_check/domain/food_check_models.dart';
 import '../../features/atur/domain/atur_models.dart';
+import '../../features/atur/presentation/utils/food_image_resolver.dart';
 
 /// Service untuk integrasi resmi Gemini API secara aman.
 /// Tidak ada kunci API hardcoded; kunci diambil via AppConfig/dotenv.
@@ -323,14 +324,15 @@ class GeminiService {
 
     const prompt =
         'Anda adalah AI pengenal bahan makanan kulkas Indonesia. '
-        'Kenali seluruh bahan makanan segar, sayuran, protein, atau bumbu yang terlihat pada foto ini. '
-        'Kembalikan HANYA JSON array dari objek bahan makanan berikut tanpa markdown:'
+        'Kenali seluruh bahan makanan segar, sayuran, protein, bumbu, atau bahan dapur yang terlihat pada foto ini. '
+        'Kembalikan HANYA JSON array dari objek bahan makanan berikut tanpa markdown:\n'
         '[\n'
         '  {\n'
         '    "id": "ing_1",\n'
-        '    "name": "Tomat",\n'
-        '    "quantity": "2 buah",\n'
-        '    "image_keyword": "tomato"\n'
+        '    "name": "Nama Bahan dalam Bahasa Indonesia (misal: Daun Bawang, Daging Sapi, Tempe, Telur Ayam)",\n'
+        '    "category": "vegetable" atau "meat" atau "fruit" atau "spice" atau "dairy" atau "grain" atau "seafood" atau "other",\n'
+        '    "quantity": "Kuantitas atau takaran terlihat (misal: 2 batang, 250 gram, 3 butir)",\n'
+        '    "image_search_keyword": "keyword bahasa Inggris bersih untuk foto studio makanan (misal: fresh scallions isolated, raw beef steak clean background, indonesian tempeh white background)"\n'
         '  }\n'
         ']';
 
@@ -383,12 +385,20 @@ class GeminiService {
     return parsedList.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
       final name = item['name'] as String? ?? 'Bahan';
-      final keyword = item['image_keyword'] as String? ?? name;
-      final mappedUrl = mapIngredientImageUrl(keyword, name);
+      final category = item['category'] as String?;
+      final keyword = item['image_search_keyword'] as String? ??
+          item['image_keyword'] as String? ??
+          name;
+      final mappedUrl = FoodImageResolver.resolveImageUrl(
+        name: name,
+        category: category,
+        searchKeyword: keyword,
+      );
 
       return DetectedIngredient(
         id: item['id'] as String? ?? 'ing_${entry.key + 1}',
         name: name,
+        category: category,
         quantity: item['quantity'] as String? ?? '1 porsi',
         imageKeyword: keyword,
         imageUrl: mappedUrl,

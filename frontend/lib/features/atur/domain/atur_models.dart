@@ -20,6 +20,7 @@ final class DetectedIngredient {
     this.emoji = '🥗',
     this.imageUrl,
     this.imageKeyword,
+    this.category,
   });
 
   final String id;
@@ -29,6 +30,7 @@ final class DetectedIngredient {
   final String emoji;
   final String? imageUrl;
   final String? imageKeyword;
+  final String? category;
 
   DetectedIngredient copyWith({
     String? id,
@@ -38,6 +40,7 @@ final class DetectedIngredient {
     String? emoji,
     String? imageUrl,
     String? imageKeyword,
+    String? category,
   }) {
     return DetectedIngredient(
       id: id ?? this.id,
@@ -47,6 +50,7 @@ final class DetectedIngredient {
       emoji: emoji ?? this.emoji,
       imageUrl: imageUrl ?? this.imageUrl,
       imageKeyword: imageKeyword ?? this.imageKeyword,
+      category: category ?? this.category,
     );
   }
 
@@ -58,6 +62,7 @@ final class DetectedIngredient {
     'emoji': emoji,
     'imageUrl': imageUrl,
     'imageKeyword': imageKeyword,
+    'category': category,
   };
 
   factory DetectedIngredient.fromJson(Map<String, dynamic> json) {
@@ -68,7 +73,10 @@ final class DetectedIngredient {
       isSelected: json['isSelected'] as bool? ?? true,
       emoji: json['emoji'] as String? ?? '🥗',
       imageUrl: json['imageUrl'] as String?,
-      imageKeyword: json['imageKeyword'] as String? ?? json['image_keyword'] as String?,
+      imageKeyword: json['imageKeyword'] as String? ??
+          json['image_keyword'] as String? ??
+          json['image_search_keyword'] as String?,
+      category: json['category'] as String?,
     );
   }
 }
