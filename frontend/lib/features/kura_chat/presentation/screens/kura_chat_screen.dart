@@ -130,48 +130,54 @@ class _KuraChatScreenState extends ConsumerState<KuraChatScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Area Percakapan (Welcome View / Messages List) ────
-            Expanded(
-              child: state.isEmpty
-                  ? WelcomeChatView(
-                      onSuggestionSelected: (prompt) {
-                        notifier.sendUserMessage(prompt);
-                      },
-                    )
-                  : ListView.builder(
-                      controller: _scrollCtrl,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemCount: state.messages.length + (state.isTyping ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == state.messages.length) {
-                          // Indikator Mengetik di paling bawah
-                          return const TypingIndicator();
-                        }
-                        final msg = state.messages[index];
-                        return ChatBubble(
-                          message: msg,
-                          onRetry: () {
-                            notifier.retryMessage(msg);
-                          },
-                        );
-                      },
-                    ),
-            ),
+      body: Column(
+        children: [
+          // ── Area Percakapan (Welcome View / Messages List) ────
+          Expanded(
+            child: state.isEmpty
+                ? WelcomeChatView(
+                    onSuggestionSelected: (prompt) {
+                      notifier.sendUserMessage(prompt);
+                      _scrollToBottom();
+                    },
+                  )
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    itemCount: state.messages.length + (state.isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == state.messages.length) {
+                        // Indikator Mengetik di paling bawah
+                        return const TypingIndicator();
+                      }
+                      final msg = state.messages[index];
+                      return ChatBubble(
+                        message: msg,
+                        onRetry: () {
+                          notifier.retryMessage(msg);
+                          _scrollToBottom();
+                        },
+                      );
+                    },
+                  ),
+          ),
 
-            // ── Input Bar Bawah (Keyboard Aware) ─────────────────
-            ChatInputBar(
-              isTyping: state.isTyping,
-              selectedImagePath: state.selectedImagePath,
-              onImageSelected: (path) => notifier.setImageAttachment(path),
-              onImageCleared: () => notifier.clearImageAttachment(),
-              onSend: (text) => notifier.sendUserMessage(text),
-            ),
-          ],
-        ),
+          // ── Input Bar Bawah (Keyboard Aware) ─────────────────
+          ChatInputBar(
+            isTyping: state.isTyping,
+            selectedImagePath: state.selectedImagePath,
+            onImageSelected: (path) {
+              notifier.setImageAttachment(path);
+              _scrollToBottom();
+            },
+            onImageCleared: () => notifier.clearImageAttachment(),
+            onSend: (text) {
+              notifier.sendUserMessage(text);
+              _scrollToBottom();
+            },
+          ),
+        ],
       ),
     );
   }
