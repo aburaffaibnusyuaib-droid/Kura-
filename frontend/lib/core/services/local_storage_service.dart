@@ -13,6 +13,8 @@ class LocalStorageService {
 
   static const String _keyFoodCheckHistory = 'kura_food_check_history_v1';
   static const String _keySavedRecipes = 'kura_saved_recipes_v1';
+  static const String _keyChatHistory = 'kura_chat_history_v1';
+  static const String _keyOnboardingDone = 'kura_onboarding_done_v1';
 
   static LocalStorageService? _instance;
 
@@ -134,5 +136,54 @@ class LocalStorageService {
     } catch (_) {
       return false;
     }
+  }
+
+  // ── Kura AI Chat History (100% Local Storage - Zero Cloud Cost) ─
+
+  /// Mengambil seluruh riwayat pesan chat lokal
+  List<Map<String, dynamic>> getChatHistory() {
+    try {
+      final jsonList = _getStringList(_keyChatHistory);
+      if (jsonList == null || jsonList.isEmpty) return const [];
+      return jsonList
+          .map((item) => jsonDecode(item) as Map<String, dynamic>)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Menyimpan riwayat pesan chat ke lokal (dibatasi 50 pesan terakhir)
+  Future<bool> saveChatHistory(List<Map<String, dynamic>> messages) async {
+    try {
+      final limited = messages.take(50).map((m) => jsonEncode(m)).toList();
+      return await _setStringList(_keyChatHistory, limited);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Menghapus seluruh riwayat chat
+  Future<bool> clearChatHistory() async {
+    return await _remove(_keyChatHistory);
+  }
+
+  // ── Onboarding State ──────────────────────────────────────────
+
+  /// Memeriksa apakah pengguna sudah menyelesaikan onboarding
+  bool isOnboardingDone() {
+    if (_prefs != null) {
+      return _prefs.getBool(_keyOnboardingDone) ?? false;
+    }
+    return _inMemory[_keyOnboardingDone]?.firstOrNull == 'true';
+  }
+
+  /// Menandai status onboarding telah selesai
+  Future<bool> setOnboardingDone([bool done = true]) async {
+    if (_prefs != null) {
+      return await _prefs.setBool(_keyOnboardingDone, done);
+    }
+    _inMemory[_keyOnboardingDone] = [done.toString()];
+    return true;
   }
 }

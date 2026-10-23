@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,14 +16,16 @@ class KuraCameraScannerScreen extends StatefulWidget {
     required this.title,
     required this.hintTitle,
     required this.hintSubtitle,
-    required this.onImageCaptured,
+    this.onImageCaptured,
+    this.onBytesCaptured,
     this.onBack,
   });
 
   final String title;
   final String hintTitle;
   final String hintSubtitle;
-  final void Function(String imagePath) onImageCaptured;
+  final void Function(String imagePath)? onImageCaptured;
+  final void Function(Uint8List imageBytes)? onBytesCaptured;
   final VoidCallback? onBack;
 
   @override
@@ -138,6 +141,18 @@ class _KuraCameraScannerScreenState extends State<KuraCameraScannerScreen>
     } catch (_) {}
   }
 
+  Future<void> _notifyCaptured(String path) async {
+    if (widget.onImageCaptured != null) {
+      widget.onImageCaptured!(path);
+    }
+    if (widget.onBytesCaptured != null) {
+      try {
+        final bytes = await File(path).readAsBytes();
+        widget.onBytesCaptured!(bytes);
+      } catch (_) {}
+    }
+  }
+
   Future<void> _capturePhoto() async {
     if (_isCapturing) return;
     HapticFeedback.lightImpact();
@@ -147,7 +162,7 @@ class _KuraCameraScannerScreenState extends State<KuraCameraScannerScreen>
         setState(() => _isCapturing = true);
         final file = await _cameraController!.takePicture();
         if (mounted) {
-          widget.onImageCaptured(file.path);
+          await _notifyCaptured(file.path);
         }
       } catch (_) {
         await _pickFromCamera();
@@ -167,7 +182,7 @@ class _KuraCameraScannerScreenState extends State<KuraCameraScannerScreen>
       imageQuality: 80,
     );
     if (picked != null && mounted) {
-      widget.onImageCaptured(picked.path);
+      await _notifyCaptured(picked.path);
     }
   }
 
@@ -180,7 +195,7 @@ class _KuraCameraScannerScreenState extends State<KuraCameraScannerScreen>
       imageQuality: 80,
     );
     if (picked != null && mounted) {
-      widget.onImageCaptured(picked.path);
+      await _notifyCaptured(picked.path);
     }
   }
 

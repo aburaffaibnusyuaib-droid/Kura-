@@ -5,9 +5,7 @@ import '../core/theme/app_colors.dart';
 import '../core/constants/app_routes.dart';
 
 /// Shell scaffold dengan Bottom Navigation Bar.
-/// Menampilkan 3 tab MVP aktif: Home, Food Check, Zero Waste (Atur).
-/// Tab "Kura AI" ditampilkan tapi akan menampilkan pesan "segera hadir"
-/// karena Kura AI Chat di luar scope MVP.
+/// Menampilkan 4 tab aktif: Home, Food Check, Zero Waste (Atur), dan Kura AI Chat.
 class ShellScaffold extends StatelessWidget {
   const ShellScaffold({super.key, required this.child});
 
@@ -16,6 +14,7 @@ class ShellScaffold extends StatelessWidget {
   int _locationToIndex(String location) {
     if (location.startsWith(AppRoutes.foodCheck)) return 1;
     if (location.startsWith(AppRoutes.atur)) return 2;
+    if (location.startsWith(AppRoutes.kuraChat)) return 3;
     return 0;
   }
 
@@ -38,13 +37,7 @@ class ShellScaffold extends StatelessWidget {
             case 2:
               context.go(AppRoutes.atur);
             case 3:
-              // Kura AI Chat: out of scope MVP — tidak navigasi
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Kura AI Chat akan hadir segera!'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              context.go(AppRoutes.kuraChat);
           }
         },
       ),

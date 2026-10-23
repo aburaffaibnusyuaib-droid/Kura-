@@ -15,6 +15,8 @@ abstract final class AppRoutes {
   static const String aturIngredients = '/atur/ingredients';
   static const String aturRecipes = '/atur/recipes';
   static const String aturRecipeDetail = '/atur/recipe-detail';
+  static const String kuraChat = '/kura-chat';
+  static const String onboarding = '/onboarding';
   static const String auth = '/auth';
   static const String settings = '/settings';
 }

@@ -15,6 +15,8 @@ import '../features/atur/presentation/screens/atur_empty_ingredients_screen.dart
 import '../features/atur/presentation/screens/atur_ingredient_selection_screen.dart';
 import '../features/atur/presentation/screens/recipe_recommendations_screen.dart';
 import '../features/atur/presentation/screens/recipe_detail_screen.dart';
+import '../features/kura_chat/presentation/screens/kura_chat_screen.dart';
+import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'shell_scaffold.dart';
 
 /// Router utama aplikasi Kura AI menggunakan go_router.
@@ -42,6 +44,12 @@ final appRouter = GoRouter(
           path: AppRoutes.atur,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: AturIntroScreen(),
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.kuraChat,
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: KuraChatScreen(),
           ),
         ),
       ],
@@ -97,6 +105,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.aturRecipeDetail,
       builder: (context, state) => const RecipeDetailScreen(),
+    ),
+
+    // ── Rute Onboarding ───────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.onboarding,
+      builder: (context, state) => const OnboardingScreen(),
     ),
   ],
 );

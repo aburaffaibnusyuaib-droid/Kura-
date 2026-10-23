@@ -103,7 +103,7 @@ class HomeScreen extends StatelessWidget {
               child: SizedBox(height: AppConstants.space12),
             ),
 
-            // Kartu Kura AI (out of scope MVP — tampilkan tapi disabled)
+            // Kartu Kura AI
             SliverToBoxAdapter(
               child: FeatureCard(
                 data: FeatureCardData(
@@ -114,14 +114,7 @@ class HomeScreen extends StatelessWidget {
                   imagePath: 'assets/images/mascot_home.png',
                   backgroundColor: AppColors.kuraAiCardTint,
                   buttonColor: AppColors.kuraAiButtonColor,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Kura AI Chat akan hadir segera!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
+                  onTap: () => context.go(AppRoutes.kuraChat),
                 ),
               ),
             ),

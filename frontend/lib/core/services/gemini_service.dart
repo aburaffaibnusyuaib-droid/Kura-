@@ -490,4 +490,102 @@ class GeminiService {
       return Recipe.fromJson(map).copyWith(imageUrl: imageUrl);
     }).toList();
   }
+
+  // ── 4. KURA AI CHAT: MULTI-TURN & MULTIMODAL CONVERSATION ─────
+
+  /// Mengirim pesan percakapan ke model Kura AI dengan Persona, Guardrail,
+  /// dan sliding-window context dari riwayat chat lokal.
+  Future<String> sendChatMessage({
+    required String prompt,
+    Uint8List? imageBytes,
+    List<Map<String, dynamic>> conversationHistory = const [],
+  }) async {
+    final contents = <Map<String, dynamic>>[];
+
+    // 1. Sliding window context: Ambil maksimal 8 pesan riwayat percakapan terakhir
+    for (final turn in conversationHistory.take(8)) {
+      final role = turn['role'] as String? ?? 'user';
+      final text = turn['text'] as String? ?? '';
+      contents.add({
+        'role': role,
+        'parts': [
+          {'text': text},
+        ],
+      });
+    }
+
+    // 2. Giliran saat ini (Current turn)
+    final currentParts = <Map<String, dynamic>>[];
+    if (prompt.trim().isNotEmpty) {
+      currentParts.add({'text': prompt.trim()});
+    } else if (imageBytes != null) {
+      currentParts.add({'text': 'Tolong analisa foto makanan/bahan ini dan berikan penjelasan kelayakan serta idenya.'});
+    }
+
+    if (imageBytes != null) {
+      currentParts.add({
+        'inline_data': {
+          'mime_type': 'image/jpeg',
+          'data': base64Encode(imageBytes),
+        },
+      });
+    }
+
+    contents.add({
+      'role': 'user',
+      'parts': currentParts,
+    });
+
+    const systemInstruction = '''
+Kamu adalah Kura AI, asisten pintar berwujud bayi kura-kura toska yang lucu, ramah, santai, empatik, dan to-the-point.
+Tugas utamamu adalah membantu pengguna seputar makanan, resep masakan, tips anti-mubazir (zero-waste), nutrisi, dan keamanan makanan.
+ATURAN MUTLAK:
+1. Gaya bahasa santai, hangat, gunakan sapaan akrab, selipkan emoji yang relevan sesekali.
+2. Jika pengguna bertanya di luar topik makanan/minuman/diet/zero-waste (koding, matematika, politik, tugas sekolah umum), tolak dengan sopan, lucu, dan singkat (1-2 kalimat), lalu ajak kembali ke topik makanan.
+3. Format penjelasan panjang wajib menggunakan bullet points ringkas agar mudah dibaca di layar HP.
+4. Jika pengguna hanya mengirim foto tanpa teks: Lakukan analisis cepat terhadap bahan/makanan di foto (tebak bahan, kesegarannya, dan berikan 1 ide olahan singkat).
+5. Jika hasil analisis visual makanan menunjukkan kesimpulan aman/tidak aman, sertakan di baris terpisah dengan format:
+[KESIMPULAN: Kesimpulan singkat di sini (misal: Brokoli ini masih aman dikonsumsi)]
+6. Jika merekomendasikan resep spesifik, kamu WAJIB menyertakan blok JSON di akhir pesanmu dengan format:
+```recipe_json
+{
+  "id": "rec_random",
+  "title": "Nama Masakan",
+  "cook_time": "15 menit",
+  "difficulty": "Mudah",
+  "servings": "2 porsi",
+  "calories": "~220 kkal",
+  "image_keyword": "nama_bahan_utama",
+  "zero_waste_tip": "Tips sisa bahan masakan ini",
+  "ingredients": ["Bahan 1 dengan takaran", "Bahan 2 dengan takaran"],
+  "steps": ["Langkah 1", "Langkah 2"]
+}
+```
+''';
+
+    final payload = {
+      'system_instruction': {
+        'parts': [
+          {'text': systemInstruction},
+        ],
+      },
+      'contents': contents,
+      'generationConfig': {
+        'temperature': 0.7,
+      },
+    };
+
+    final responseBody = await _postGenerateContent(payload);
+
+    final jsonResp = jsonDecode(responseBody) as Map<String, dynamic>;
+    final candidates = jsonResp['candidates'] as List<dynamic>?;
+    if (candidates == null || candidates.isEmpty) {
+      throw const FormatException('Tidak ada jawaban dari Kura AI');
+    }
+
+    final content = candidates.first['content'] as Map<String, dynamic>?;
+    final parts = content?['parts'] as List<dynamic>?;
+    final text = parts?.first['text'] as String? ?? '';
+    return text;
+  }
 }

@@ -204,17 +204,27 @@ final class Recipe {
             .toList() ??
         const [];
 
+    int parseSafeInt(dynamic val, int fallback) {
+      if (val is int) return val;
+      if (val is double) return val.toInt();
+      if (val is String) {
+        final digits = RegExp(r'\d+').firstMatch(val)?.group(0);
+        if (digits != null) return int.tryParse(digits) ?? fallback;
+      }
+      return fallback;
+    }
+
     return Recipe(
       id: json['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: json['name'] as String? ?? json['title'] as String? ?? 'Resep Lezat',
-      durationMinutes: json['durationMinutes'] as int? ?? json['cook_time'] as int? ?? 15,
+      durationMinutes: parseSafeInt(json['durationMinutes'] ?? json['cook_time'], 15),
       difficulty: json['difficulty'] as String? ?? 'Mudah',
       tags: rawTags.map((e) => e.toString()).toList(),
       ingredients: rawIngredients,
       steps: stepsList,
-      servings: json['servings'] as int? ?? 2,
+      servings: parseSafeInt(json['servings'], 2),
       description: json['description'] as String? ?? '',
-      calories: json['calories'] as int? ?? 200,
+      calories: parseSafeInt(json['calories'], 200),
       zeroWasteTip: json['zeroWasteTip'] as String? ?? json['zero_waste_tip'] as String? ?? '',
       colorHex: json['colorHex'] as int? ?? 0xFF00CBA7,
       imageUrl: json['imageUrl'] as String?,
