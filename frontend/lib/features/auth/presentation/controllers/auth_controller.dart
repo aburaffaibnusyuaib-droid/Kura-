@@ -170,4 +170,7 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
     await _repo.signOut();
     state = const KuraAuthState(isGuest: false);
   }
+
+  /// Alias signOut untuk konsistensi
+  Future<void> signOut() => logout();
 }

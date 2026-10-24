@@ -1,5 +1,6 @@
 /// Named routes untuk go_router.
 abstract final class AppRoutes {
+  static const String splash = '/splash';
   static const String home = '/';
   static const String foodCheck = '/food-check';
   static const String foodCheckScan = '/food-check/scan';

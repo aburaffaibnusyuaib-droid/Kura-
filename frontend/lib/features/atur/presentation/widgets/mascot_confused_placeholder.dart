@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 /// Menampilkan maskot Kura bingung (empty state).
-/// Memuat gambar `assets/images/mascot_confused.jpg` jika ada,
+/// Memuat gambar `assets/images/mascot_confused.png` jika ada,
 /// atau jatuh ke placeholder estetik jika belum tersedia.
 class MascotConfusedPlaceholder extends StatelessWidget {
   const MascotConfusedPlaceholder({super.key, this.size = 140});
@@ -18,7 +18,7 @@ class MascotConfusedPlaceholder extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(size / 2),
       child: Image.asset(
-        'assets/images/mascot_confused.jpg',
+        'assets/images/mascot_confused.png',
         width: size,
         height: size,
         fit: BoxFit.cover,

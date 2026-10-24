@@ -24,14 +24,21 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../features/splash/presentation/screens/splash_screen.dart';
 import 'shell_scaffold.dart';
 
 /// Router utama aplikasi Kura AI menggunakan go_router.
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.home,
+  initialLocation: AppRoutes.splash,
   debugLogDiagnostics: false,
   redirect: (context, state) {
     final location = state.uri.path;
+
+    // Biarkan SplashScreen menyelesaikan animasi pembuka dan handshake sesi
+    if (location == AppRoutes.splash) {
+      return null;
+    }
+
     final isAuthRoute = location == AppRoutes.welcome ||
         location == AppRoutes.login ||
         location == AppRoutes.register ||
@@ -165,6 +172,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.forgotPassword,
       builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.splash,
+      builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
       path: AppRoutes.otp,

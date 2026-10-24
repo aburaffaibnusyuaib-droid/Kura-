@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/kura_global_app_bar.dart';
 import '../widgets/atur_workflow_stepper_card.dart';
 
 /// Halaman Intro / Hub Atur Makanan (Mockup 01 Refactored).
@@ -16,6 +17,7 @@ class AturIntroScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const KuraGlobalAppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -23,44 +25,6 @@ class AturIntroScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppConstants.space12),
-
-              // ── Top Header dengan Avatar Profil ────────────────
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: AppColors.electricTeal,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.eco_rounded,
-                      color: AppColors.deepMidnightNavy,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: AppConstants.space8),
-                  Text('Kura AI', style: AppTextStyles.headlineMedium),
-                  const Spacer(),
-                  // Avatar Profil Kanan Atas
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.electricTeal.withAlpha(35),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      color: AppColors.deepMidnightNavy,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-
               const SizedBox(height: AppConstants.space16),
 
               // ── Judul & Tagline Atur ────────────────────────────

@@ -65,16 +65,16 @@ class _KuraAiAnalyzingViewState extends State<KuraAiAnalyzingView>
   void initState() {
     super.initState();
 
-    // Animasi pernapasan/pulsing halus (skala 0.96 ke 1.04 dengan Curves.easeInOutSine)
+    // Animasi pernapasan/pulsing halus (skala 0.96 ke 1.04 dengan Curves.easeInOut)
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 0.96, end: 1.04).animate(
       CurvedAnimation(
         parent: _pulseController,
-        curve: Curves.easeInOutSine,
+        curve: Curves.easeInOut,
       ),
     );
 
@@ -183,38 +183,44 @@ class _KuraAiAnalyzingViewState extends State<KuraAiAnalyzingView>
                         Container(
                           width: 170,
                           height: 170,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0x3300B4A0),
-                                blurRadius: 40,
-                                spreadRadius: 10,
+                                color: Color(0x3300B4A0),
+                                blurRadius: 36,
+                                spreadRadius: 8,
                               ),
                             ],
                           ),
                         ),
 
                         // Maskot Animasi Bernapas (0.96 -> 1.04)
-                        ScaleTransition(
-                          scale: _pulseAnimation,
-                          child: Image.asset(
-                            'assets/images/mascot_analyzing.png',
-                            width: 175,
-                            height: 175,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                              width: 140,
-                              height: 140,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE0F2F1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.biotech_rounded,
-                                size: 64,
-                                color: AppColors.electricTeal,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: 180,
+                            maxWidth: 180,
+                          ),
+                          child: ScaleTransition(
+                            scale: _pulseAnimation,
+                            child: Image.asset(
+                              'assets/images/mascot_analyzing.png',
+                              width: 175,
+                              height: 175,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                width: 140,
+                                height: 140,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE0F2F1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.biotech_rounded,
+                                  size: 64,
+                                  color: AppColors.electricTeal,
+                                ),
                               ),
                             ),
                           ),

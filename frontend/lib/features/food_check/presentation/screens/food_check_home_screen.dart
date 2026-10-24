@@ -6,9 +6,9 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/kura_global_app_bar.dart';
 import '../../domain/food_check_models.dart';
 import '../controllers/food_check_controller.dart';
-import '../widgets/demo_scenario_sheet.dart';
 import '../widgets/food_check_banner.dart';
 import '../widgets/food_check_guides_section.dart';
 import '../widgets/food_type_card.dart';
@@ -25,77 +25,14 @@ class FoodCheckHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const KuraGlobalAppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Top Header ─────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppConstants.horizontalPadding,
-                  AppConstants.space16,
-                  AppConstants.space8,
-                  AppConstants.space8,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColors.electricTeal,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.eco_rounded,
-                        color: AppColors.deepMidnightNavy,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppConstants.space8),
-                    Text('Kura AI', style: AppTextStyles.headlineMedium),
-                    const Spacer(),
-                    // Tombol Simulasi Demo (Skenario)
-                    IconButton(
-                      icon: const Icon(Icons.tune_rounded, color: AppColors.electricTeal),
-                      tooltip: 'Pilih Skenario Demo',
-                      onPressed: () {
-                        showModalBottomSheet<void>(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (ctx) => DemoScenarioSheet(
-                            currentScenario: state.selectedScenario,
-                            isOffline: state.isOffline,
-                            onSelectScenario: (scen) {
-                              controller.setScenario(scen);
-                              Navigator.pop(ctx);
-                            },
-                            onToggleOffline: (off) {
-                              controller.setOfflineState(off);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    // Avatar Profil
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.electricTeal.withAlpha(35),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: AppColors.deepMidnightNavy,
-                        size: 22,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: AppConstants.space16),
 
               // ── Title & Subtitle ──────────────────────────────
               Padding(

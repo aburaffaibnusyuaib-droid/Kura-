@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/kura_global_app_bar.dart';
 import '../controllers/kura_chat_controller.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input_bar.dart';
@@ -54,58 +54,8 @@ class _KuraChatScreenState extends ConsumerState<KuraChatScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFE0F2F1),
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/mascot_home.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.eco_rounded,
-                    color: Color(0xFF00CBA7),
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kura AI',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  state.isTyping ? 'Mengetik...' : 'Asisten Makanan & Dapur',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: state.isTyping
-                        ? const Color(0xFF00CBA7)
-                        : AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
+      appBar: KuraGlobalAppBar(
+        extraActions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
             onSelected: (val) {
