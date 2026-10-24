@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import '../../../core/services/gemini_service.dart';
 import '../../../core/services/local_storage_service.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../domain/kura_chat_models.dart';
 
 abstract class KuraChatRepository {
@@ -48,12 +50,13 @@ class KuraChatRepositoryImpl implements KuraChatRepository {
     String? imagePath,
     required List<ChatMessage> currentHistory,
   }) async {
-    // 1. Baca bytes gambar jika ada lampiran
+    // 1. Baca bytes gambar jika ada lampiran & kompres secara asinkron
     Uint8List? imageBytes;
     if (imagePath != null && imagePath.isNotEmpty) {
       final file = File(imagePath);
       if (await file.exists()) {
-        imageBytes = await file.readAsBytes();
+        final raw = await file.readAsBytes();
+        imageBytes = await ImageCompressor.compressBytes(raw);
       }
     }
 
@@ -66,24 +69,50 @@ class KuraChatRepositoryImpl implements KuraChatRepository {
             })
         .toList();
 
-    // 3. Kirim ke Gemini Service
-    final rawResponse = await geminiService.sendChatMessage(
-      prompt: text,
-      imageBytes: imageBytes,
-      conversationHistory: historyPayload,
-    );
+    // 3. Kirim ke Gemini Service dengan pemulihan error berkelas
+    try {
+      final rawResponse = await geminiService.sendChatMessage(
+        prompt: text,
+        imageBytes: imageBytes,
+        conversationHistory: historyPayload,
+      );
 
-    // 4. Parsing response untuk kesimpulan dan resep
-    final (cleanText, conclusion, recipe) = ChatMessage.parseAiResponse(rawResponse);
+      // 4. Parsing response untuk kesimpulan dan resep
+      final (cleanText, conclusion, recipe) = ChatMessage.parseAiResponse(rawResponse);
 
-    return ChatMessage(
-      id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
-      isUser: false,
-      text: cleanText,
-      timestamp: DateTime.now(),
-      status: ChatMessageStatus.sent,
-      conclusionBadge: conclusion,
-      embeddedRecipe: recipe,
-    );
+      return ChatMessage(
+        id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+        isUser: false,
+        text: cleanText,
+        timestamp: DateTime.now(),
+        status: ChatMessageStatus.sent,
+        conclusionBadge: conclusion,
+        embeddedRecipe: recipe,
+      );
+    } on TimeoutException {
+      return ChatMessage(
+        id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+        isUser: false,
+        text: 'Waktu respon Kura AI habis (30 detik). Jaringan sedang lambat, silakan coba kirim ulang ya!',
+        timestamp: DateTime.now(),
+        status: ChatMessageStatus.error,
+      );
+    } on SocketException {
+      return ChatMessage(
+        id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+        isUser: false,
+        text: 'Tidak ada koneksi internet. Periksa koneksi data atau Wi-Fi Anda dan coba lagi.',
+        timestamp: DateTime.now(),
+        status: ChatMessageStatus.error,
+      );
+    } catch (_) {
+      return ChatMessage(
+        id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+        isUser: false,
+        text: 'Terjadi gangguan jaringan atau server sedang sibuk. Silakan coba sesaat lagi.',
+        timestamp: DateTime.now(),
+        status: ChatMessageStatus.error,
+      );
+    }
   }
 }

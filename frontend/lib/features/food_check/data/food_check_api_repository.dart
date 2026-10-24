@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/services/gemini_service.dart';
 import '../../../core/services/local_storage_service.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../domain/food_check_models.dart';
 import 'food_check_repository.dart';
 
@@ -37,7 +38,10 @@ class FoodCheckApiRepository implements FoodCheckRepository {
       imageBytes = await file.readAsBytes();
     }
 
-    // 2. Kirim ke Gemini 1.5 Flash Vision API
+    // 2. Kompresi gambar asinkron (maks 1024px, JPEG 78%, isolate compute bila > 1.5MB)
+    imageBytes = await ImageCompressor.compressBytes(imageBytes);
+
+    // 3. Kirim ke Gemini 1.5 Flash Vision API
     final result = await geminiService.assessFoodCheck(
       imageBytes: imageBytes,
       imagePath: imagePath,
@@ -45,7 +49,7 @@ class FoodCheckApiRepository implements FoodCheckRepository {
       questionnaireAnswers: questionnaireAnswers,
     );
 
-    // 3. Simpan hasil penilaian ke Local Storage
+    // 4. Simpan hasil penilaian ke Local Storage
     try {
       await localStorageService.saveFoodCheck(result);
     } catch (_) {

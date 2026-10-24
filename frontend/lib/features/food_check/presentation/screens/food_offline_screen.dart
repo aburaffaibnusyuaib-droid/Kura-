@@ -17,33 +17,17 @@ class FoodOfflineScreen extends ConsumerWidget {
     final errorMsg = state.errorMessage ?? '';
     final isTimeout = errorMsg.toLowerCase().contains('timeout') ||
         errorMsg.toLowerCase().contains('waktu');
-    final isOffline = state.isOffline;
 
-    final String title;
-    final String description;
-    final Widget iconWidget;
+    final String title = isTimeout ? 'Waktu Pemeriksaan Habis' : 'Koneksi Terganggu';
+    final String description =
+        'Proses membutuhkan waktu terlalu lama atau koneksi sedang terganggu. Periksa kembali internetmu dan coba lagi ya!';
 
-    if (isTimeout) {
-      title = 'Waktu Analisis Habis';
-      description =
-          'AI membutuhkan waktu lebih lama untuk memproses foto. Silakan coba analisis lagi.';
-      iconWidget = Container(
-        width: 120,
-        height: 120,
-        decoration: const BoxDecoration(
-          color: AppColors.aturCardTint,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.hourglass_empty_rounded,
-          size: 60,
-          color: AppColors.sunsetOrange,
-        ),
-      );
-    } else if (!isOffline && errorMsg.isNotEmpty) {
-      title = 'Kendala Layanan AI';
-      description = errorMsg;
-      iconWidget = Container(
+    final Widget iconWidget = Image.asset(
+      'assets/images/mascot_confused.png',
+      width: 150,
+      height: 150,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => Container(
         width: 120,
         height: 120,
         decoration: const BoxDecoration(
@@ -51,130 +35,124 @@ class FoodOfflineScreen extends ConsumerWidget {
           shape: BoxShape.circle,
         ),
         child: const Icon(
-          Icons.cloud_off_rounded,
-          size: 60,
+          Icons.wifi_off_rounded,
+          size: 64,
           color: AppColors.sunsetOrange,
         ),
-      );
-    } else {
-      title = 'Tidak Ada Koneksi Internet';
-      description = errorMsg.isNotEmpty
-          ? errorMsg
-          : 'Periksa koneksi internet Anda dan coba lagi.';
-      iconWidget = Image.asset(
-        'assets/images/il_no_internet.png',
-        width: 180,
-        height: 180,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 120,
-          height: 120,
-          decoration: const BoxDecoration(
-            color: AppColors.foodCheckCardTint,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.wifi_off_rounded,
-            size: 64,
-            color: AppColors.sunsetOrange,
-          ),
-        ),
-      );
-    }
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go(AppRoutes.foodCheck),
+          onPressed: () => context.go(AppRoutes.home),
         ),
         backgroundColor: AppColors.background,
+        elevation: 0,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // Ilustrasi Status Error Cerdas
-              iconWidget,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(),
+                      // Maskot Bingung Kura AI
+                      iconWidget,
 
-              const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
-              Text(
-                title,
-                style: AppTextStyles.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
+                      Text(
+                        title,
+                        style: AppTextStyles.headlineLarge.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
 
-              const SizedBox(height: 8),
+                      const SizedBox(height: 10),
 
-              Text(
-                description,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                      Text(
+                        description,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const Spacer(),
+
+                      // Tombol Coba Lagi
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            HapticFeedback.lightImpact();
+                            ref.read(foodCheckControllerProvider.notifier).setOfflineState(false);
+                            context.pushReplacement(AppRoutes.foodCheckAnalyzing);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryTeal,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Coba Lagi',
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Tombol Kembali
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.go(AppRoutes.home);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primaryTeal),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            'Kembali',
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: AppColors.primaryTeal,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-
-              const Spacer(),
-
-              // Tombol Coba Lagi
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    HapticFeedback.lightImpact();
-                    ref.read(foodCheckControllerProvider.notifier).setOfflineState(false);
-                    context.pushReplacement(AppRoutes.foodCheckAnalyzing);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.electricTeal,
-                    foregroundColor: AppColors.deepMidnightNavy,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Coba Lagi',
-                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Tombol Kembali ke Beranda
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    context.go(AppRoutes.home);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.electricTeal),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: Text(
-                    'Kembali ke Beranda',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.electricTeal,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),

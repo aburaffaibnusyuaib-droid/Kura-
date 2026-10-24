@@ -170,8 +170,8 @@ class GeminiService {
     return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
   }
 
-  /// Eksekusi POST request ke Gemini dengan fallback otomatis jika model 503/404
-  /// Timeout diperluas hingga 35 detik agar aman untuk mobile network dan generasi resep komprehensif.
+  /// Eksekusi POST request ke Gemini dengan fallback otomatis jika model 503/404.
+  /// Batas waktu timeout jaringan tepat 30 detik sesuai standar resiliency.
   Future<String> _postGenerateContent(Map<String, dynamic> payload) async {
     if (apiKey.trim().isEmpty) {
       throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
@@ -190,7 +190,12 @@ class GeminiService {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode(payload),
             )
-            .timeout(const Duration(seconds: 35));
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () {
+                throw TimeoutException("Batas waktu koneksi terlampaui (30 detik). Silakan coba lagi.");
+              },
+            );
 
         if (response.statusCode == 200) {
           return response.body;
@@ -204,12 +209,15 @@ class GeminiService {
           break;
         }
       } on TimeoutException {
-        lastError = 'Waktu permintaan ke Gemini ($model) habis (timeout)';
-        continue;
+        lastError = 'Batas waktu koneksi terlampaui (30 detik). Silakan coba lagi.';
+        rethrow;
+      } on SocketException {
+        rethrow;
+      } on FormatException {
+        rethrow;
       } catch (e) {
         lastError = e.toString();
-        if (e is SocketException) {
-          // Masalah koneksi fisik, tidak perlu mencoba model lain
+        if (e is SocketException || e is TimeoutException || e is FormatException) {
           rethrow;
         }
       }

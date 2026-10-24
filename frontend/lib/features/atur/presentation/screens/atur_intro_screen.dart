@@ -66,13 +66,13 @@ class AturIntroScreen extends StatelessWidget {
 
   Widget _buildIllustrationBanner() {
     return Container(
-      height: 180,
+      constraints: const BoxConstraints(minHeight: 180),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFFC8F5E9),
-            const Color(0xFFE2F9F2),
+            Color(0xFFC8F5E9),
+            Color(0xFFE2F9F2),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -87,67 +87,63 @@ class AturIntroScreen extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Ilustrasi Kanan
-            Positioned(
-              right: 8,
-              top: 10,
-              bottom: 10,
-              width: 155,
-              child: Image.asset(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Tagline Kiri
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.electricTeal,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'ZERO WASTE',
+                        style: AppTextStyles.caption.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 9,
+                          color: AppColors.deepMidnightNavy,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kurangi\nSisa Pangan',
+                      style: AppTextStyles.headlineLarge.copyWith(
+                        color: AppColors.deepMidnightNavy,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Bahan di kulkas siap diolah!',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Ilustrasi Kanan
+              Image.asset(
                 'assets/images/il_zero_waste.png',
+                width: 120,
+                height: 120,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(),
               ),
-            ),
-            // Tagline Kiri
-            Positioned(
-              left: 20,
-              top: 0,
-              bottom: 0,
-              right: 150,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.electricTeal,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'ZERO WASTE',
-                      style: AppTextStyles.caption.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 9,
-                        color: AppColors.deepMidnightNavy,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Kurangi\nSisa Pangan',
-                    style: AppTextStyles.headlineLarge.copyWith(
-                      color: AppColors.deepMidnightNavy,
-                      fontWeight: FontWeight.w800,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Bahan di kulkas siap diolah!',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

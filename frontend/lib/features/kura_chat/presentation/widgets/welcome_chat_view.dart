@@ -36,7 +36,8 @@ class WelcomeChatView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Greeting Header ──────────────────────────────────────
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Halo, Teman Kura! ',
@@ -103,35 +104,39 @@ class WelcomeChatView extends StatelessWidget {
                   ),
                 ],
               ),
-              child: ListTile(
-                dense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2F1),
-                    borderRadius: BorderRadius.circular(10),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: ListTile(
+                  dense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0F2F1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(cat.$2, color: const Color(0xFF00897B), size: 18),
                   ),
-                  child: Icon(cat.$2, color: const Color(0xFF00897B), size: 18),
-                ),
-                title: Text(
-                  cat.$1,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.deepMidnightNavy,
+                  title: Text(
+                    cat.$1,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.deepMidnightNavy,
+                    ),
                   ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Color(0xFF00897B),
+                  ),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onSuggestionSelected('Tolong jelaskan tentang ${cat.$1}');
+                  },
                 ),
-                trailing: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Color(0xFF00897B),
-                ),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  onSuggestionSelected('Tolong jelaskan tentang ${cat.$1}');
-                },
               ),
             );
           }),

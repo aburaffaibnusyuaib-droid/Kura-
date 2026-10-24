@@ -26,8 +26,15 @@ class RecentScansSection extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Riwayat Cek Terakhir', style: AppTextStyles.headlineMedium),
-              if (history.isNotEmpty)
+              Expanded(
+                child: Text(
+                  'Riwayat Cek Terakhir',
+                  style: AppTextStyles.headlineMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (history.isNotEmpty) ...[
+                const SizedBox(width: 8),
                 Text(
                   '${history.length} Terpindai',
                   style: AppTextStyles.labelSmall.copyWith(
@@ -35,6 +42,7 @@ class RecentScansSection extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+              ],
             ],
           ),
         ),

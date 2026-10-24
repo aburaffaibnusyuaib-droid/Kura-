@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../../core/services/gemini_service.dart';
 import '../../../core/services/local_storage_service.dart';
 import '../../../core/services/supabase_service.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../domain/atur_models.dart';
 import 'atur_repository.dart';
 
@@ -33,7 +34,8 @@ final class AturHybridRepository implements AturRepository {
       );
     }
 
-    final bytes = await file.readAsBytes();
+    final rawBytes = await file.readAsBytes();
+    final bytes = await ImageCompressor.compressBytes(rawBytes);
     final ingredients = await geminiService.detectIngredients(imageBytes: bytes);
     return ingredients;
   }

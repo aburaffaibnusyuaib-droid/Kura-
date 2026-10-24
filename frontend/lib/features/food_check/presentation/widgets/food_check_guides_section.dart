@@ -42,7 +42,13 @@ class FoodCheckGuidesSection extends StatelessWidget {
             children: [
               const Icon(Icons.lightbulb_outline_rounded, color: AppColors.electricTeal, size: 20),
               const SizedBox(width: 8),
-              Text('Panduan Cepat Kura AI', style: AppTextStyles.headlineMedium),
+              Expanded(
+                child: Text(
+                  'Panduan Cepat Kura AI',
+                  style: AppTextStyles.headlineMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppConstants.space12),

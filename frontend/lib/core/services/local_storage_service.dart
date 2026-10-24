@@ -71,7 +71,7 @@ class LocalStorageService {
     }
   }
 
-  /// Menyimpan satu hasil scan Food Check ke riwayat lokal
+  /// Menyimpan satu hasil scan Food Check ke riwayat lokal (FIFO maks 50 entri)
   Future<bool> saveFoodCheck(FoodCheckResult result) async {
     try {
       final currentList = getFoodCheckHistory();
@@ -80,7 +80,7 @@ class LocalStorageService {
         ...currentList.where((item) => item.id != result.id),
       ];
       final limited =
-          updated.take(20).map((r) => jsonEncode(r.toJson())).toList();
+          updated.take(50).map((r) => jsonEncode(r.toJson())).toList();
       return await _setStringList(_keyFoodCheckHistory, limited);
     } catch (_) {
       return false;
@@ -112,7 +112,7 @@ class LocalStorageService {
     return getSavedRecipes().map((r) => r.id).toSet();
   }
 
-  /// Menyimpan satu resep ke penyimpanan lokal
+  /// Menyimpan satu resep ke penyimpanan lokal (FIFO maks 50 entri)
   Future<bool> saveRecipe(Recipe recipe) async {
     try {
       final currentList = getSavedRecipes();
@@ -121,7 +121,7 @@ class LocalStorageService {
         markedRecipe,
         ...currentList.where((r) => r.id != recipe.id),
       ];
-      final encoded = updated.map((r) => jsonEncode(r.toJson())).toList();
+      final encoded = updated.take(50).map((r) => jsonEncode(r.toJson())).toList();
       return await _setStringList(_keySavedRecipes, encoded);
     } catch (_) {
       return false;
@@ -168,6 +168,13 @@ class LocalStorageService {
   /// Menghapus seluruh riwayat chat
   Future<bool> clearChatHistory() async {
     return await _remove(_keyChatHistory);
+  }
+
+  /// Menghapus seluruh riwayat scan dan riwayat chat (bersihkan cache lokal)
+  Future<bool> clearAllCacheAndLocalHistory() async {
+    final res1 = await clearFoodCheckHistory();
+    final res2 = await clearChatHistory();
+    return res1 && res2;
   }
 
   // ── Onboarding State ──────────────────────────────────────────

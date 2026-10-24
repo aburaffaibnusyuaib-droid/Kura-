@@ -1,6 +1,14 @@
 # Kura AI — gitignore
 # Secret dan file lokal/build tidak boleh masuk Git.
 
+# Kredensial Sensitif & Kunci Rilis
+.env
+.env.*
+*.jks
+*.keystore
+key.properties
+google-services.json
+
 # Environment files
 .env
 .env.local

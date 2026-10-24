@@ -71,16 +71,23 @@ class _KuraCameraScannerScreenState extends State<KuraCameraScannerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _laserController.dispose();
     _cameraController?.dispose();
+    _cameraController = null;
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      if (lifecycleState == AppLifecycleState.resumed) {
+        _initCameraFlow();
+      }
       return;
     }
-    if (lifecycleState == AppLifecycleState.inactive) {
+    if (lifecycleState == AppLifecycleState.inactive ||
+        lifecycleState == AppLifecycleState.paused) {
       _cameraController?.dispose();
+      _cameraController = null;
+      _isCameraInitialized = false;
     } else if (lifecycleState == AppLifecycleState.resumed) {
       _initCameraFlow();
     }

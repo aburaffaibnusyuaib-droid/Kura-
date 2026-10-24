@@ -20,6 +20,7 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.5.6
   supabase_flutter: ^2.18.3
+  image: ^4.1.7
 
 dependency_overrides:
   permission_handler_android: 13.0.1

@@ -117,8 +117,8 @@ class _FeatureIllustration extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Image.asset(
           imagePath,
-          width: 90,
-          height: 90,
+          width: 80,
+          height: 80,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
         ),
@@ -129,8 +129,8 @@ class _FeatureIllustration extends StatelessWidget {
 
   Widget _buildPlaceholder() {
     return Container(
-      width: 90,
-      height: 90,
+      width: 80,
+      height: 80,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -179,12 +179,16 @@ class _FeatureButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label,
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: _isDark
-                      ? AppColors.deepMidnightNavy
-                      : AppColors.white,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: _isDark
+                        ? AppColors.deepMidnightNavy
+                        : AppColors.white,
+                  ),
                 ),
               ),
               const SizedBox(width: AppConstants.space4),

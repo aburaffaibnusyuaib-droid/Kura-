@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -34,7 +35,8 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -83,7 +85,7 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -105,6 +107,54 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       style: AppTextStyles.labelLarge.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Tombol Bersihkan Cache & Riwayat Lokal
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      HapticFeedback.mediumImpact();
+                      await LocalStorageService.instance.clearAllCacheAndLocalHistory();
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                      }
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Cache dan riwayat lokal berhasil dibersihkan.',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                            backgroundColor: AppColors.primaryTeal,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.cleaning_services_rounded,
+                      color: AppColors.primaryTeal,
+                      size: 20,
+                    ),
+                    label: Text(
+                      'Bersihkan Cache & Riwayat Lokal',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.primaryTeal,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryTeal),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
@@ -150,7 +200,55 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                // Tombol Bersihkan Cache & Riwayat Lokal
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      HapticFeedback.mediumImpact();
+                      await LocalStorageService.instance.clearAllCacheAndLocalHistory();
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                      }
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Cache dan riwayat lokal berhasil dibersihkan.',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                            backgroundColor: AppColors.primaryTeal,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.cleaning_services_rounded,
+                      color: AppColors.primaryTeal,
+                      size: 20,
+                    ),
+                    label: Text(
+                      'Bersihkan Cache & Riwayat Lokal',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.primaryTeal,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryTeal),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -234,10 +332,11 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         ...?extraActions,
         Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: GestureDetector(
-            onTap: () => _showProfileModal(context, ref),
-            child: Container(
+          padding: const EdgeInsets.only(right: 8),
+          child: IconButton(
+            onPressed: () => _showProfileModal(context, ref),
+            tooltip: 'Profil',
+            icon: Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
