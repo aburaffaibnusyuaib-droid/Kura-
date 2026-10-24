@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/local_storage_service.dart';
 
 /// Header salam Home Screen: teks sambutan + ilustrasi maskot.
 /// Logo dan nama app ditampilkan di bagian AppBar custom di [HomeScreen].
@@ -33,7 +34,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: AppConstants.space4),
                 Text(
-                  'Pengguna! 👋',
+                  '${LocalStorageService.instance.getUserName()}! 👋',
                   style: AppTextStyles.displayMedium,
                 ),
                 const SizedBox(height: AppConstants.space8),

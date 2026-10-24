@@ -15,6 +15,8 @@ class LocalStorageService {
   static const String _keySavedRecipes = 'kura_saved_recipes_v1';
   static const String _keyChatHistory = 'kura_chat_history_v1';
   static const String _keyOnboardingDone = 'kura_onboarding_done_v1';
+  static const String _keyGuestMode = 'kura_guest_mode_v1';
+  static const String _keyUserName = 'kura_user_name_v1';
 
   static LocalStorageService? _instance;
 
@@ -185,5 +187,41 @@ class LocalStorageService {
     }
     _inMemory[_keyOnboardingDone] = [done.toString()];
     return true;
+  }
+
+  // ── Auth & Guest Mode State ───────────────────────────────────
+
+  /// Memeriksa apakah pengguna berada dalam mode tamu
+  bool isGuestMode() {
+    if (_prefs != null) {
+      return _prefs.getBool(_keyGuestMode) ?? true;
+    }
+    return _inMemory[_keyGuestMode]?.firstOrNull != 'false';
+  }
+
+  /// Mengatur status mode tamu
+  Future<bool> setGuestMode([bool isGuest = true]) async {
+    if (_prefs != null) {
+      return await _prefs.setBool(_keyGuestMode, isGuest);
+    }
+    _inMemory[_keyGuestMode] = [isGuest.toString()];
+    return true;
+  }
+
+  /// Menyimpan nama pengguna lokal
+  Future<bool> setUserName(String name) async {
+    if (_prefs != null) {
+      return await _prefs.setString(_keyUserName, name);
+    }
+    _inMemory[_keyUserName] = [name];
+    return true;
+  }
+
+  /// Mengambil nama pengguna lokal
+  String getUserName() {
+    if (_prefs != null) {
+      return _prefs.getString(_keyUserName) ?? 'Pengguna';
+    }
+    return _inMemory[_keyUserName]?.firstOrNull ?? 'Pengguna';
   }
 }
