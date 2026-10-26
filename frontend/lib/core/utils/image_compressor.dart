@@ -6,8 +6,8 @@ import 'package:image/image.dart' as img;
 class ImageCompressionParams {
   const ImageCompressionParams({
     required this.bytes,
-    this.maxDimension = 1024,
-    this.quality = 78,
+    this.maxDimension = 800,
+    this.quality = 70,
   });
 
   final Uint8List bytes;
@@ -46,8 +46,8 @@ Uint8List _compressImageWorker(ImageCompressionParams params) {
 class ImageCompressor {
   const ImageCompressor._();
 
-  static const int maxDimension = 1024;
-  static const int defaultQuality = 78;
+  static const int maxDimension = 800;
+  static const int defaultQuality = 70;
   static const int heavyThresholdBytes = 1572864; // 1.5 MB
 
   /// Mengompres bytes gambar. Menjalankan di background compute jika ukuran > 1.5MB.

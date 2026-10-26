@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import '../../../../app/router.dart';
+import '../../../../core/services/local_storage_service.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../domain/auth_user.dart';
 
 /// State representasi status autentikasi Kura AI
 class KuraAuthState {
@@ -19,7 +21,9 @@ class KuraAuthState {
   final String? errorMessage;
   final String? successMessage;
 
-  bool get isAuthenticated => user != null && !user!.isAnonymous;
+  bool get isAuthenticated =>
+      (user != null && !user!.isAnonymous) ||
+      LocalStorageService.instance.isAuthSessionActive();
 
   KuraAuthState copyWith({
     User? user,
@@ -71,6 +75,8 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
     try {
       final user = await _repo.signInWithEmail(email, password);
+      await LocalStorageService.instance.setGuestMode(false);
+      await LocalStorageService.instance.setAuthSessionActive(true);
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -96,10 +102,22 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
     try {
-      final user = await _repo.signUpWithEmail(email, password, fullName);
+      final dynamic authResult = await _repo.signUpWithEmail(
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
+      User? user;
+      if (authResult is AuthUser) {
+        user = authResult.rawUser;
+      } else if (authResult is User) {
+        user = authResult;
+      }
+      await LocalStorageService.instance.setGuestMode(false);
+      await LocalStorageService.instance.setAuthSessionActive(true);
       state = state.copyWith(
         isLoading: false,
-        user: user,
+        user: user ?? _repo.currentUser,
         isGuest: false,
         successMessage: 'Pendaftaran berhasil! Akun Kura AI siap digunakan.',
       );
@@ -119,12 +137,15 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
     try {
       await _repo.signInAsGuest();
+      await LocalStorageService.instance.setGuestMode(true);
+      await LocalStorageService.instance.setAuthSessionActive(false);
       state = state.copyWith(
         isLoading: false,
         isGuest: true,
+        user: null,
       );
     } catch (_) {
-      state = state.copyWith(isLoading: false, isGuest: true);
+      state = state.copyWith(isLoading: false, isGuest: true, user: null);
     }
     routerNotifier.notify();
   }

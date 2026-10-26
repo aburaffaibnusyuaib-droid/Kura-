@@ -65,7 +65,7 @@ final appRouter = GoRouter(
         location == AppRoutes.otp;
 
     final isGuest = LocalStorageService.instance.isGuestMode();
-    bool isAuthenticated = false;
+    bool isAuthenticated = LocalStorageService.instance.isAuthSessionActive();
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null && !user.isAnonymous) {

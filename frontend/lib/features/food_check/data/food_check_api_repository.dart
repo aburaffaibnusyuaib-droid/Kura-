@@ -38,8 +38,12 @@ class FoodCheckApiRepository implements FoodCheckRepository {
       imageBytes = await file.readAsBytes();
     }
 
-    // 2. Kompresi gambar asinkron (maks 1024px, JPEG 78%, isolate compute bila > 1.5MB)
-    imageBytes = await ImageCompressor.compressBytes(imageBytes);
+    // 2. Kompresi gambar asinkron (maks 800px, JPEG 70%, payload < 150KB)
+    imageBytes = await ImageCompressor.compressBytes(
+      imageBytes,
+      maxDim: 800,
+      quality: 70,
+    );
 
     // 3. Kirim ke Gemini 1.5 Flash Vision API
     final result = await geminiService.assessFoodCheck(

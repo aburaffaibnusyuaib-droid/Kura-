@@ -21,6 +21,7 @@ class GeminiService {
   /// Model prioritas yang didukung Google Generative Language API.
   /// Urutan fallback otomatis jika model tertentu mengalami 503 high demand atau 404:
   static const List<String> _modelHierarchy = [
+    'gemini-1.5-flash',
     'gemini-flash-lite-latest',
     'gemini-3.8-flash',
     'gemini-flash-latest',
@@ -171,8 +172,11 @@ class GeminiService {
   }
 
   /// Eksekusi POST request ke Gemini dengan fallback otomatis jika model 503/404.
-  /// Batas waktu timeout jaringan tepat 30 detik sesuai standar resiliency.
-  Future<String> _postGenerateContent(Map<String, dynamic> payload) async {
+  /// Batas waktu timeout jaringan tepat 60 detik untuk ketahanan koneksi.
+  Future<String> _postGenerateContent(
+    Map<String, dynamic> payload, {
+    Duration timeoutDuration = const Duration(seconds: 60),
+  }) async {
     if (apiKey.trim().isEmpty) {
       throw const SocketException('GEMINI_API_KEY belum dikonfigurasi di file .env');
     }
@@ -191,9 +195,9 @@ class GeminiService {
               body: jsonEncode(payload),
             )
             .timeout(
-              const Duration(seconds: 30),
+              timeoutDuration,
               onTimeout: () {
-                throw TimeoutException("Batas waktu koneksi terlampaui (30 detik). Silakan coba lagi.");
+                throw TimeoutException("Waktu respon habis (60 detik). Jaringan lambat, silakan coba lagi.");
               },
             );
 
@@ -209,8 +213,8 @@ class GeminiService {
           break;
         }
       } on TimeoutException {
-        lastError = 'Batas waktu koneksi terlampaui (30 detik). Silakan coba lagi.';
-        rethrow;
+        lastError = 'Waktu respon habis (60 detik). Jaringan lambat, silakan coba lagi.';
+        throw TimeoutException("Waktu respon habis (60 detik). Jaringan lambat, silakan coba lagi.");
       } on SocketException {
         rethrow;
       } on FormatException {
@@ -331,19 +335,14 @@ class GeminiService {
     final base64Image = base64Encode(imageBytes);
 
     const prompt =
-        'Analisis gambar kulkas/bahan makanan ini secara cermat. '
-        'Identifikasi seluruh bahan makanan yang terlihat dan kembalikan HANYA format JSON valid tanpa markdown tambahan:\n'
+        'Analisis gambar ini. Kembalikan HANYA format JSON valid berikut:\n'
         '[\n'
         '  {\n'
-        '    "id": "ing_1",\n'
         '    "nama_bahan": "Bawang Bombay",\n'
-        '    "kategori": "Sayuran / Umbi",\n'
-        '    "jumlah_perkiraan": "1 butir",\n'
-        '    "image_keyword": "yellow onion raw fresh"\n'
+        '    "box_2d": [ymin, xmin, ymax, xmax]\n'
         '  }\n'
-        ']\n\n'
-        'ATURAN STRICT:\n'
-        '- Nilai "image_keyword" WAJIB dalam bahasa Inggris yang sangat deskriptif dan akurat mengenai wujud fisik bahan mentah agar dapat dicari secara visual tanpa ambiguitas (CONTOH: gunakan "garlic cloves" bukan "garlic", gunakan "raw whole watermelon" bukan "watermelon", gunakan "white chicken egg" bukan "egg").';
+        ']\n'
+        'ATURAN: \'box_2d\' adalah array 4 angka (skala 0-1000) koordinat kotak bahan di foto. Jika tidak menemukan koordinat, kembalikan [].';
 
     final payload = {
       'contents': [
@@ -404,6 +403,11 @@ class GeminiService {
           name;
       final mappedUrl = IngredientImageResolver.getSearchUrl(keyword);
 
+      final rawBox = item['box_2d'] as List<dynamic>? ?? item['box2d'] as List<dynamic>?;
+      final List<int>? box2d = rawBox != null && rawBox.length == 4
+          ? rawBox.map((e) => (e as num).toInt()).toList()
+          : null;
+
       return DetectedIngredient(
         id: item['id'] as String? ?? 'ing_${entry.key + 1}',
         name: name,
@@ -411,6 +415,7 @@ class GeminiService {
         quantity: quantity,
         imageKeyword: keyword,
         imageUrl: mappedUrl,
+        box2d: box2d,
         isSelected: true,
       );
     }).toList();

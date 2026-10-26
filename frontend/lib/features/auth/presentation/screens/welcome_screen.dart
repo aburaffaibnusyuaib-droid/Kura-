@@ -37,153 +37,165 @@ class WelcomeScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 12),
+                    // ── Bagian Atas: Maskot & Headline ─────────────────────
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 12),
 
-                    // ── Ilustrasi Maskot Welcome ───────────────────────────
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: 180,
-                          maxWidth: 180,
-                        ),
-                        child: Image.asset(
-                          'assets/images/mascot_auth_welcome.png',
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                            Icons.eco_rounded,
-                            size: 90,
-                            color: Color(0xFF00B4A0),
+                        // Ilustrasi Maskot Welcome
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: isTablet ? 220 : 180,
+                              maxWidth: isTablet ? 220 : 180,
+                            ),
+                            child: Image.asset(
+                              'assets/images/mascot_auth_welcome.png',
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.medium,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                Icons.eco_rounded,
+                                size: 90,
+                                color: Color(0xFF00B4A0),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+
+                        const SizedBox(height: 24),
+
+                        // Headline & Subtitle
+                        Text(
+                          'Mulai Hidup Sehat\n& Anti-Mubazir',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.displayMedium.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            height: 1.25,
+                            color: AppColors.deepMidnightNavy,
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Teman setia mengelola makanan cerdas di dapurmu.',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(height: 24),
+                    // ── Bagian Bawah: Aksi Autentikasi Terpadu ──────────────
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 24),
 
-                    // ── Headline & Subtitle ────────────────────────────────
-                    Text(
-                      'Mulai Hidup Sehat\n& Anti-Mubazir',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.displayMedium.copyWith(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        height: 1.25,
-                        color: AppColors.deepMidnightNavy,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Teman setia mengelola makanan cerdas di dapurmu.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 36),
-
-                    // ── Tombol Utama: Masuk dengan Email ────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          HapticFeedback.lightImpact();
-                          context.push(AppRoutes.login);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00B4A0),
-                          foregroundColor: Colors.white,
-                          elevation: 2,
-                          shadowColor: const Color(0x3300B4A0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Masuk dengan Email',
-                          style: AppTextStyles.labelLarge.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ── Tombol Sekunder: Daftar Akun Baru ───────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          HapticFeedback.lightImpact();
-                          context.push(AppRoutes.register);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF00B4A0),
-                          side: const BorderSide(
-                            color: Color(0xFF00B4A0),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Daftar Akun Baru',
-                          style: AppTextStyles.labelLarge.copyWith(
-                            color: const Color(0xFF00B4A0),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // ── Tombol Tamu: Eksplorasi Dulu ────────────────────────
-                    TextButton(
-                      onPressed: authState.isLoading
-                          ? null
-                          : () async {
+                        // Tombol Utama: Masuk dengan Email
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: () {
                               HapticFeedback.lightImpact();
-                              await authNotifier.continueAsGuest();
-                              if (context.mounted) {
-                                context.go(AppRoutes.home);
-                              }
+                              context.push(AppRoutes.login);
                             },
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF00B4A0),
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shadowColor: const Color(0x3300B4A0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              'Masuk dengan Email',
+                              style: AppTextStyles.labelLarge.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'Eksplorasi Dulu (Lanjut sebagai Tamu)',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+
+                        // Tombol Sekunder: Daftar Akun Baru
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              context.push(AppRoutes.register);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF00B4A0),
+                              side: const BorderSide(
+                                color: Color(0xFF00B4A0),
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              'Daftar Akun Baru',
+                              style: AppTextStyles.labelLarge.copyWith(
+                                color: const Color(0xFF00B4A0),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Tombol Tamu: Eksplorasi Dulu
+                        TextButton(
+                          onPressed: authState.isLoading
+                              ? null
+                              : () async {
+                                  HapticFeedback.lightImpact();
+                                  await authNotifier.continueAsGuest();
+                                  if (context.mounted) {
+                                    context.go(AppRoutes.home);
+                                  }
+                                },
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.textSecondary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: Text(
+                            'Eksplorasi Dulu (Lanjut sebagai Tamu)',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ],
                 ),
               ),

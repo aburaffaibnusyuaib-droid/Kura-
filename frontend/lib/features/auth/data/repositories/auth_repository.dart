@@ -15,6 +15,7 @@ class AuthRepository {
       : _storage = storage ?? LocalStorageService.instance;
 
   final LocalStorageService _storage;
+  LocalStorageService get storage => _storage;
 
   /// Mengambil instance SupabaseClient secara aman (menghindari exception saat test/offline)
   SupabaseClient? get _client {
@@ -25,12 +26,16 @@ class AuthRepository {
     }
   }
 
+  SupabaseClient? get client => _client;
+
   /// Pengguna yang sedang masuk saat ini
   User? get currentUser => _client?.auth.currentUser;
 
   /// Memeriksa apakah sesi saat ini adalah mode tamu (Guest)
   bool get isGuest {
     final user = currentUser;
+    if (user != null && !user.isAnonymous) return false;
+    if (_storage.isAuthSessionActive()) return false;
     if (user != null && user.isAnonymous) return true;
     return _storage.isGuestMode();
   }
@@ -54,6 +59,7 @@ class AuthRepository {
       final user = response.user;
       if (user != null) {
         await _storage.setGuestMode(false);
+        await _storage.setAuthSessionActive(true);
         final fullName = user.userMetadata?['full_name'] as String?;
         if (fullName != null && fullName.isNotEmpty) {
           await _storage.setUserName(fullName);
@@ -70,12 +76,12 @@ class AuthRepository {
   }
 
   /// Mendaftar akun baru dengan Nama Lengkap, Email, dan Kata Sandi
-  /// Mengeksekusi auto-login mulus sehingga sesi Supabase langsung aktif.
-  Future<User?> signUpWithEmail(
-    String email,
-    String password,
-    String fullName,
-  ) async {
+  /// Konfigurasi Confirm Email nonaktif: sesi dan user langsung terikat.
+  Future<dynamic> signUpWithEmail({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
     final client = _client;
     if (client == null) {
       throw const SocketException('Layanan autentikasi belum terhubung. Periksa konfigurasi Supabase.');
@@ -88,49 +94,21 @@ class AuthRepository {
         data: {'full_name': fullName.trim()},
       );
 
-      // 1. Jika Supabase langsung menerbitkan sesi aktif (Email confirmation nonaktif)
-      if (response.session != null && response.user != null) {
-        await _storage.setGuestMode(false);
-        await _storage.setUserName(fullName.trim());
-        return response.user;
-      }
-
-      // 2. Fallback: Lakukan login otomatis di latar belakang jika sesi belum langsung terlampir
-      try {
-        final loginResponse = await client.auth.signInWithPassword(
-          email: email.trim(),
-          password: password.trim(),
-        );
-
-        if (loginResponse.user != null) {
-          await _storage.setGuestMode(false);
-          await _storage.setUserName(fullName.trim());
-          return loginResponse.user;
-        }
-      } catch (_) {
-        // Jika auto-login belum dapat dilakukan (misal backend Supabase menunggu konfirmasi),
-        // tetap ikat user jika user baru telah terdaftar
-        if (response.user != null) {
-          await _storage.setGuestMode(false);
-          await _storage.setUserName(fullName.trim());
-          return response.user;
-        }
-      }
-
       if (response.user != null) {
         await _storage.setGuestMode(false);
+        await _storage.setAuthSessionActive(true);
         await _storage.setUserName(fullName.trim());
         return response.user;
       }
 
-      throw Exception("Gagal memulai sesi login otomatis setelah pendaftaran.");
+      throw Exception("Gagal mendaftarkan akun. Silakan coba lagi.");
     } on AuthException catch (e) {
       throw _handleAuthException(e);
     } on SocketException catch (_) {
       throw const SocketException('Koneksi internet bermasalah. Periksa jaringan Anda.');
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('Gagal mendaftarkan akun. Periksa koneksi internet.');
+      throw Exception('Terjadi kesalahan sistem atau email sudah terdaftar.');
     }
   }
 
@@ -138,6 +116,7 @@ class AuthRepository {
   /// Membuat sesi anonim di Supabase (jika aktif) dan mengaktifkan guest flag di local storage
   Future<void> signInAsGuest() async {
     await _storage.setGuestMode(true);
+    await _storage.setAuthSessionActive(false);
     await _storage.setUserName('Tamu Kura');
 
     final client = _client;
@@ -208,6 +187,7 @@ class AuthRepository {
         await client.auth.signOut();
       } catch (_) {}
     }
+    await _storage.setAuthSessionActive(false);
     await _storage.setGuestMode(false);
     await _storage.setUserName('Pengguna');
   }

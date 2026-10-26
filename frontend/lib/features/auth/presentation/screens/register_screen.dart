@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/auth_controller.dart';
@@ -67,7 +66,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           backgroundColor: Color(0xFF00B4A0),
         ),
       );
-      context.go(AppRoutes.home);
+      // GoRouter redirect reaktif menangani navigasi otomatis ke AppRoutes.home
     } else if (mounted) {
       final error = ref.read(authControllerProvider).errorMessage;
       if (error != null) {

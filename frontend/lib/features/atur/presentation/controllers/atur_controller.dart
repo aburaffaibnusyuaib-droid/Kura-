@@ -1,6 +1,7 @@
 // TASK-05: Atur Module — State Controller (Riverpod)
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +69,14 @@ class AturNotifier extends StateNotifier<AturState> {
       clearError: true,
     );
     try {
+      Uint8List? imageBytes;
+      if (state.capturedImagePath != null) {
+        final file = File(state.capturedImagePath!);
+        if (await file.exists()) {
+          imageBytes = await file.readAsBytes();
+        }
+      }
+
       final ingredients = await _repository.analyzeIngredients(
         state.capturedImagePath,
       );
@@ -77,6 +86,7 @@ class AturNotifier extends StateNotifier<AturState> {
         state = state.copyWith(
           status: AturAnalysisStatus.detected,
           detectedIngredients: ingredients,
+          capturedImageBytes: imageBytes,
         );
       }
     } on Exception catch (e) {

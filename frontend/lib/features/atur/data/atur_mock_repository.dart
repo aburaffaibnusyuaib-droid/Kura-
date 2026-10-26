@@ -14,6 +14,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '3 buah',
       emoji: '🍅',
       imageKeyword: 'fresh red tomato raw',
+      box2d: [100, 100, 400, 400],
     ),
     DetectedIngredient(
       id: 'i2',
@@ -21,6 +22,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '100 g',
       emoji: '🥬',
       imageKeyword: 'crisp green lettuce leaves',
+      box2d: [150, 450, 500, 850],
     ),
     DetectedIngredient(
       id: 'i3',
@@ -28,6 +30,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '2 buah',
       emoji: '🥕',
       imageKeyword: 'fresh orange carrot raw',
+      box2d: [450, 100, 850, 450],
     ),
     DetectedIngredient(
       id: 'i4',
@@ -35,6 +38,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '4 butir',
       emoji: '🥚',
       imageKeyword: 'white chicken egg raw',
+      box2d: [500, 500, 800, 800],
     ),
     DetectedIngredient(
       id: 'i5',
@@ -42,6 +46,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '5 buah',
       emoji: '🌶️',
       imageKeyword: 'fresh red hot chili pepper',
+      box2d: [200, 200, 600, 600],
     ),
     DetectedIngredient(
       id: 'i6',
@@ -49,6 +54,7 @@ final class AturMockRepository implements AturRepository {
       quantity: '1 siung',
       emoji: '🧅',
       imageKeyword: 'fresh red shallots cloves',
+      box2d: [600, 200, 900, 500],
     ),
   ];
 

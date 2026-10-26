@@ -118,7 +118,7 @@ class _FreshFoodQuestionnaireScreenState
                       // Maskot dengan Speech Bubble (Mockup 10)
                       Center(
                         child: Image.asset(
-                          'assets/images/mascot_home.png',
+                          'assets/images/mascot_confused.png',
                           width: 130,
                           height: 130,
                           fit: BoxFit.contain,

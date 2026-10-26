@@ -261,6 +261,8 @@ class _AturIngredientSelectionScreenState
                             final ing = ingredients[index];
                             return IngredientGridCard(
                               ingredient: ing,
+                              originalImage: state.capturedImageBytes,
+                              originalImagePath: state.capturedImagePath,
                               onToggle: () => ref
                                   .read(aturControllerProvider.notifier)
                                   .toggleIngredient(ing.id),

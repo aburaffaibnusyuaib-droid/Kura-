@@ -17,6 +17,7 @@ class LocalStorageService {
   static const String _keyOnboardingDone = 'kura_onboarding_done_v1';
   static const String _keyGuestMode = 'kura_guest_mode_v1';
   static const String _keyUserName = 'kura_user_name_v1';
+  static const String _keyAuthSessionActive = 'kura_auth_session_active_v1';
 
   static LocalStorageService? _instance;
 
@@ -230,5 +231,22 @@ class LocalStorageService {
       return _prefs.getString(_keyUserName) ?? 'Pengguna';
     }
     return _inMemory[_keyUserName]?.firstOrNull ?? 'Pengguna';
+  }
+
+  /// Memeriksa apakah terdapat sesi autentikasi pengguna aktif
+  bool isAuthSessionActive() {
+    if (_prefs != null) {
+      return _prefs.getBool(_keyAuthSessionActive) ?? false;
+    }
+    return _inMemory[_keyAuthSessionActive]?.firstOrNull == 'true';
+  }
+
+  /// Menandai status aktif sesi autentikasi
+  Future<bool> setAuthSessionActive([bool active = true]) async {
+    if (_prefs != null) {
+      return await _prefs.setBool(_keyAuthSessionActive, active);
+    }
+    _inMemory[_keyAuthSessionActive] = [active.toString()];
+    return true;
   }
 }

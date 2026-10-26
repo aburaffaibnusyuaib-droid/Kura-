@@ -6,6 +6,7 @@ import 'package:kura_ai/features/food_check/presentation/screens/food_check_home
 import 'package:kura_ai/features/atur/presentation/screens/atur_intro_screen.dart';
 import 'package:kura_ai/features/kura_chat/presentation/screens/kura_chat_screen.dart';
 import 'package:kura_ai/features/food_check/presentation/screens/food_offline_screen.dart';
+import 'package:kura_ai/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:kura_ai/core/theme/app_theme.dart';
 
 void main() {
@@ -103,6 +104,24 @@ void main() {
 
         expect(tester.takeException(), isNull);
       });
+
+      testWidgets('WelcomeScreen renders with zero overflow at ${width}px width', (tester) async {
+        tester.view.physicalSize = Size(width * 2, 800 * 2);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: const WelcomeScreen(),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      });
     }
 
     for (final scale in textScales) {
@@ -139,6 +158,27 @@ void main() {
               home: MediaQuery(
                 data: MediaQueryData(textScaler: TextScaler.linear(scale)),
                 child: const FoodOfflineScreen(),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('WelcomeScreen handles large font scale $scale without overflow', (tester) async {
+        tester.view.physicalSize = const Size(720, 1612);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: const WelcomeScreen(),
               ),
             ),
           ),

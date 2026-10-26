@@ -35,7 +35,11 @@ final class AturHybridRepository implements AturRepository {
     }
 
     final rawBytes = await file.readAsBytes();
-    final bytes = await ImageCompressor.compressBytes(rawBytes);
+    final bytes = await ImageCompressor.compressBytes(
+      rawBytes,
+      maxDim: 800,
+      quality: 70,
+    );
     final ingredients = await geminiService.detectIngredients(imageBytes: bytes);
     return ingredients;
   }

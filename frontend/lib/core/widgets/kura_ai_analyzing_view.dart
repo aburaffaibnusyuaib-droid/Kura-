@@ -198,15 +198,13 @@ class _KuraAiAnalyzingViewState extends State<KuraAiAnalyzingView>
                         // Maskot Animasi Bernapas (0.96 -> 1.04)
                         ConstrainedBox(
                           constraints: const BoxConstraints(
-                            maxHeight: 180,
+                            maxHeight: 200,
                             maxWidth: 180,
                           ),
                           child: ScaleTransition(
                             scale: _pulseAnimation,
                             child: Image.asset(
                               'assets/images/mascot_analyzing.png',
-                              width: 175,
-                              height: 175,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(

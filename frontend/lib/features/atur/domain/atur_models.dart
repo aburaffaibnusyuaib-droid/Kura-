@@ -1,5 +1,7 @@
 // TASK-05: Atur Module — Domain Models
 
+import 'dart:typed_data';
+
 /// Status analisis AI untuk deteksi bahan makanan.
 enum AturAnalysisStatus {
   idle,
@@ -21,6 +23,7 @@ final class DetectedIngredient {
     this.imageUrl,
     this.imageKeyword,
     this.category,
+    this.box2d,
   });
 
   final String id;
@@ -31,6 +34,7 @@ final class DetectedIngredient {
   final String? imageUrl;
   final String? imageKeyword;
   final String? category;
+  final List<int>? box2d;
 
   DetectedIngredient copyWith({
     String? id,
@@ -41,6 +45,7 @@ final class DetectedIngredient {
     String? imageUrl,
     String? imageKeyword,
     String? category,
+    List<int>? box2d,
   }) {
     return DetectedIngredient(
       id: id ?? this.id,
@@ -51,6 +56,7 @@ final class DetectedIngredient {
       imageUrl: imageUrl ?? this.imageUrl,
       imageKeyword: imageKeyword ?? this.imageKeyword,
       category: category ?? this.category,
+      box2d: box2d ?? this.box2d,
     );
   }
 
@@ -63,6 +69,7 @@ final class DetectedIngredient {
     'imageUrl': imageUrl,
     'imageKeyword': imageKeyword,
     'category': category,
+    'box_2d': box2d,
   };
 
   factory DetectedIngredient.fromJson(Map<String, dynamic> json) {
@@ -71,6 +78,11 @@ final class DetectedIngredient {
         json['imageKeyword'] as String? ??
         json['image_search_keyword'] as String? ??
         (name.isNotEmpty ? name : null);
+
+    final rawBox = json['box_2d'] as List<dynamic>? ?? json['box2d'] as List<dynamic>?;
+    final box2d = rawBox != null && rawBox.length == 4
+        ? rawBox.map((e) => (e as num).toInt()).toList()
+        : null;
 
     return DetectedIngredient(
       id: json['id'] as String? ?? '',
@@ -83,6 +95,7 @@ final class DetectedIngredient {
       imageUrl: json['imageUrl'] as String?,
       imageKeyword: keyword,
       category: json['kategori'] as String? ?? json['category'] as String?,
+      box2d: box2d,
     );
   }
 }
@@ -258,6 +271,7 @@ final class AturState {
     this.recipes = const [],
     this.errorMessage,
     this.capturedImagePath,
+    this.capturedImageBytes,
     this.selectedRecipe,
     this.hasPermission = false,
     this.savedRecipeIds = const {},
@@ -268,6 +282,7 @@ final class AturState {
   final List<Recipe> recipes;
   final String? errorMessage;
   final String? capturedImagePath;
+  final Uint8List? capturedImageBytes;
   final Recipe? selectedRecipe;
   final bool hasPermission;
   final Set<String> savedRecipeIds;
@@ -282,6 +297,7 @@ final class AturState {
     List<Recipe>? recipes,
     String? errorMessage,
     String? capturedImagePath,
+    Uint8List? capturedImageBytes,
     Recipe? selectedRecipe,
     bool? hasPermission,
     Set<String>? savedRecipeIds,
@@ -296,6 +312,8 @@ final class AturState {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       capturedImagePath:
           clearImage ? null : (capturedImagePath ?? this.capturedImagePath),
+      capturedImageBytes:
+          clearImage ? null : (capturedImageBytes ?? this.capturedImageBytes),
       selectedRecipe:
           clearRecipe ? null : (selectedRecipe ?? this.selectedRecipe),
       hasPermission: hasPermission ?? this.hasPermission,
