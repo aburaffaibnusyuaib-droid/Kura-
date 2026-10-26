@@ -70,6 +70,7 @@ class AuthRepository {
   }
 
   /// Mendaftar akun baru dengan Nama Lengkap, Email, dan Kata Sandi
+  /// Mengeksekusi auto-login mulus sehingga sesi Supabase langsung aktif.
   Future<User?> signUpWithEmail(
     String email,
     String password,
@@ -83,22 +84,53 @@ class AuthRepository {
     try {
       final response = await client.auth.signUp(
         email: email.trim(),
-        password: password,
+        password: password.trim(),
         data: {'full_name': fullName.trim()},
       );
 
-      final user = response.user;
-      if (user != null) {
+      // 1. Jika Supabase langsung menerbitkan sesi aktif (Email confirmation nonaktif)
+      if (response.session != null && response.user != null) {
         await _storage.setGuestMode(false);
         await _storage.setUserName(fullName.trim());
+        return response.user;
       }
-      return user;
+
+      // 2. Fallback: Lakukan login otomatis di latar belakang jika sesi belum langsung terlampir
+      try {
+        final loginResponse = await client.auth.signInWithPassword(
+          email: email.trim(),
+          password: password.trim(),
+        );
+
+        if (loginResponse.user != null) {
+          await _storage.setGuestMode(false);
+          await _storage.setUserName(fullName.trim());
+          return loginResponse.user;
+        }
+      } catch (_) {
+        // Jika auto-login belum dapat dilakukan (misal backend Supabase menunggu konfirmasi),
+        // tetap ikat user jika user baru telah terdaftar
+        if (response.user != null) {
+          await _storage.setGuestMode(false);
+          await _storage.setUserName(fullName.trim());
+          return response.user;
+        }
+      }
+
+      if (response.user != null) {
+        await _storage.setGuestMode(false);
+        await _storage.setUserName(fullName.trim());
+        return response.user;
+      }
+
+      throw Exception("Gagal memulai sesi login otomatis setelah pendaftaran.");
     } on AuthException catch (e) {
       throw _handleAuthException(e);
     } on SocketException catch (_) {
       throw const SocketException('Koneksi internet bermasalah. Periksa jaringan Anda.');
     } catch (e) {
-      throw Exception('Gagal mendaftar: ${e.toString()}');
+      if (e is Exception) rethrow;
+      throw Exception('Gagal mendaftarkan akun. Periksa koneksi internet.');
     }
   }
 

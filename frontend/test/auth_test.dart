@@ -1,15 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kura_ai/core/services/local_storage_service.dart';
+import 'package:kura_ai/features/atur/utils/ingredient_image_resolver.dart';
 import 'package:kura_ai/features/auth/data/repositories/auth_repository.dart';
 import 'package:kura_ai/features/auth/presentation/controllers/auth_controller.dart';
 
 void main() {
   group('AuthRepository & Local Storage Guest Mode', () {
-    test('guest mode is true by default for zero forced login friction', () {
+    test('guest mode is false by default until activated or chosen', () {
       final storage = LocalStorageService();
       final repo = AuthRepository(storage: storage);
 
-      expect(repo.isGuest, isTrue);
+      expect(repo.isGuest, isFalse);
     });
 
     test('signInAsGuest activates guest flag and stores Tamu Kura name', () async {
@@ -61,6 +62,19 @@ void main() {
 
       notifier.clearSuccess();
       expect(notifier.state.successMessage, isNull);
+    });
+  });
+
+  group('Dynamic AI Ingredient Image Resolver', () {
+    test('getSearchUrl cleans whitespace and formats Unsplash featured URL', () {
+      final url = IngredientImageResolver.getSearchUrl('yellow onion raw fresh');
+      expect(url, 'https://source.unsplash.com/featured/600x600/?yellow-onion-raw-fresh');
+    });
+
+    test('getSearchUrl encodes special characters properly', () {
+      final url = IngredientImageResolver.getSearchUrl('sweet soy sauce / bottle');
+      expect(url, contains('https://source.unsplash.com/featured/600x600/?'));
+      expect(url, isNot(contains(' ')));
     });
   });
 }

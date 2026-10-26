@@ -115,17 +115,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final isTablet = MediaQuery.of(context).size.width > 600;
             return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32.0 : 20.0,
+                vertical: 16.0,
+              ),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - 32).clamp(0, double.infinity),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                         // ── Maskot Login Winking ────────────────────────────
                         Center(
                           child: ConstrainedBox(
@@ -322,11 +327,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
 
-                        const Spacer(),
+                        const SizedBox(height: 24),
 
                         // ── Bottom Link: Belum Punya Akun ───────────────────
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 12, top: 16),
+                          padding: const EdgeInsets.only(bottom: 12, top: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -356,8 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
-              ),
-            );
+              );
           },
         ),
       ),

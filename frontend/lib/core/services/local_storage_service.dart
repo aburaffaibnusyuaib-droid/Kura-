@@ -201,9 +201,9 @@ class LocalStorageService {
   /// Memeriksa apakah pengguna berada dalam mode tamu
   bool isGuestMode() {
     if (_prefs != null) {
-      return _prefs.getBool(_keyGuestMode) ?? true;
+      return _prefs.getBool(_keyGuestMode) ?? false;
     }
-    return _inMemory[_keyGuestMode]?.firstOrNull != 'false';
+    return _inMemory[_keyGuestMode]?.firstOrNull == 'true';
   }
 
   /// Mengatur status mode tamu

@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../../features/food_check/domain/food_check_models.dart';
 import '../../features/atur/domain/atur_models.dart';
-import '../../features/atur/presentation/utils/food_image_resolver.dart';
+import '../../features/atur/utils/ingredient_image_resolver.dart';
 
 /// Service untuk integrasi resmi Gemini API secara aman.
 /// Tidak ada kunci API hardcoded; kunci diambil via AppConfig/dotenv.
@@ -324,25 +324,26 @@ class GeminiService {
 
   // ── 2. ATUR: DETECT INGREDIENTS API ───────────────────────────
 
-  /// Mengirim foto kulkas / bahan ke Gemini untuk deteksi bahan.
+  /// Mengirim foto kulkas / bahan ke Gemini untuk deteksi bahan secara cerdas.
   Future<List<DetectedIngredient>> detectIngredients({
     required Uint8List imageBytes,
   }) async {
     final base64Image = base64Encode(imageBytes);
 
     const prompt =
-        'Anda adalah AI pengenal bahan makanan kulkas Indonesia. '
-        'Kenali seluruh bahan makanan segar, sayuran, protein, bumbu, atau bahan dapur yang terlihat pada foto ini. '
-        'Kembalikan HANYA JSON array dari objek bahan makanan berikut tanpa markdown:\n'
+        'Analisis gambar kulkas/bahan makanan ini secara cermat. '
+        'Identifikasi seluruh bahan makanan yang terlihat dan kembalikan HANYA format JSON valid tanpa markdown tambahan:\n'
         '[\n'
         '  {\n'
         '    "id": "ing_1",\n'
-        '    "name": "Nama Bahan dalam Bahasa Indonesia (misal: Daun Bawang, Daging Sapi, Tempe, Telur Ayam)",\n'
-        '    "category": "vegetable" atau "meat" atau "fruit" atau "spice" atau "dairy" atau "grain" atau "seafood" atau "other",\n'
-        '    "quantity": "Kuantitas atau takaran terlihat (misal: 2 batang, 250 gram, 3 butir)",\n'
-        '    "image_search_keyword": "keyword bahasa Inggris bersih untuk foto studio makanan (misal: fresh scallions isolated, raw beef steak clean background, indonesian tempeh white background)"\n'
+        '    "nama_bahan": "Bawang Bombay",\n'
+        '    "kategori": "Sayuran / Umbi",\n'
+        '    "jumlah_perkiraan": "1 butir",\n'
+        '    "image_keyword": "yellow onion raw fresh"\n'
         '  }\n'
-        ']';
+        ']\n\n'
+        'ATURAN STRICT:\n'
+        '- Nilai "image_keyword" WAJIB dalam bahasa Inggris yang sangat deskriptif dan akurat mengenai wujud fisik bahan mentah agar dapat dicari secara visual tanpa ambiguitas (CONTOH: gunakan "garlic cloves" bukan "garlic", gunakan "raw whole watermelon" bukan "watermelon", gunakan "white chicken egg" bukan "egg").';
 
     final payload = {
       'contents': [
@@ -392,22 +393,22 @@ class GeminiService {
 
     return parsedList.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
-      final name = item['name'] as String? ?? 'Bahan';
-      final category = item['category'] as String?;
-      final keyword = item['image_search_keyword'] as String? ??
-          item['image_keyword'] as String? ??
+      final name = item['nama_bahan'] as String? ?? item['name'] as String? ?? 'Bahan';
+      final category = item['kategori'] as String? ?? item['category'] as String?;
+      final quantity = item['jumlah_perkiraan'] as String? ??
+          item['quantity'] as String? ??
+          '1 porsi';
+      final keyword = item['image_keyword'] as String? ??
+          item['image_search_keyword'] as String? ??
+          item['imageKeyword'] as String? ??
           name;
-      final mappedUrl = FoodImageResolver.resolveImageUrl(
-        name: name,
-        category: category,
-        searchKeyword: keyword,
-      );
+      final mappedUrl = IngredientImageResolver.getSearchUrl(keyword);
 
       return DetectedIngredient(
         id: item['id'] as String? ?? 'ing_${entry.key + 1}',
         name: name,
         category: category,
-        quantity: item['quantity'] as String? ?? '1 porsi',
+        quantity: quantity,
         imageKeyword: keyword,
         imageUrl: mappedUrl,
         isSelected: true,
@@ -417,7 +418,7 @@ class GeminiService {
 
   // ── 3. ATUR: GENERATE ZERO WASTE RECIPES API ──────────────────
 
-  /// Mengirim bahan terpilih ke Gemini untuk menghasilkan 3 resep zero waste.
+  /// Mengirim bahan terpilih ke Gemini untuk menghasilkan 3 resep zero waste ketat.
   Future<List<Recipe>> generateZeroWasteRecipes({
     required List<DetectedIngredient> selectedIngredients,
   }) async {
@@ -426,25 +427,27 @@ class GeminiService {
         .join('\n');
 
     final prompt =
-        'Anda adalah koki profesional Indonesia spesialis gerakan Zero Waste Food. '
-        'Berdasarkan daftar bahan makanan sisa yang dimiliki pengguna berikut:\n'
+        'Kamu adalah Chef Ahli Zero-Waste Kura AI.\n'
+        'User HANYA memiliki bahan-bahan berikut:\n'
         '$ingredientsListText\n\n'
-        'Buatkan TEPAT 3 resep masakan Indonesia yang lezat, praktis, hemat, dan memaksimalkan bahan tanpa ada yang terbuang sia-sia. '
-        'KEMBALIKAN HANYA JSON array dengan persis 3 objek resep berikut tanpa markdown:'
+        'ATURAN MUTLAK:\n'
+        '1. Resep yang direkomendasikan WAJIB memanfaatkan bahan-bahan di atas sebagai bahan baku utama.\n'
+        '2. DILARANG menambahkan bahan utama lain yang tidak ada dalam daftar di atas (hanya bahan dasar dapur umum yang diizinkan sebagai tambahan: minyak goreng, air, garam, gula, lada).\n'
+        '3. Hasilkan output JSON valid memuat TEPAT 3 resep masakan dalam format JSON array tanpa markdown tambahan:\n'
         '[\n'
         '  {\n'
         '    "id": "recipe_1",\n'
-        '    "title": "Nama Masakan Indonesia",\n'
-        '    "cook_time": 20,\n'
-        '    "difficulty": "Mudah",\n'
-        '    "servings": 2,\n'
-        '    "calories": 210,\n'
-        '    "description": "Deskripsi selera 1-2 kalimat",\n'
-        '    "ingredients": ["Bahan 1 dengan takaran", "Bahan 2 dengan takaran"],\n'
-        '    "steps": [\n'
+        '    "nama_resep": "Nama Masakan Indonesia",\n'
+        '    "estimasi_waktu": "20 menit",\n'
+        '    "tingkat_kesulitan": "Mudah",\n'
+        '    "bahan_terpakai": ["Bahan 1 dengan takaran", "Bahan 2 dengan takaran"],\n'
+        '    "langkah_memasak": [\n'
         '      "Langkah 1...",\n'
         '      "Langkah 2..."\n'
         '    ],\n'
+        '    "servings": 2,\n'
+        '    "calories": 210,\n'
+        '    "description": "Deskripsi selera 1-2 kalimat",\n'
         '    "zero_waste_tip": "Tips memanfaatkan sisa batang/kulit/air rebusan agar nol sampah makanan"\n'
         '  }\n'
         ']';

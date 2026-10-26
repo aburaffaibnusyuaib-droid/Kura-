@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../app/router.dart';
 import '../../data/repositories/auth_repository.dart';
 
 /// State representasi status autentikasi Kura AI
@@ -76,6 +77,7 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
         isGuest: false,
         successMessage: 'Berhasil masuk ke Kura AI!',
       );
+      routerNotifier.notify();
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -101,6 +103,7 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
         isGuest: false,
         successMessage: 'Pendaftaran berhasil! Akun Kura AI siap digunakan.',
       );
+      routerNotifier.notify();
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -123,6 +126,7 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
     } catch (_) {
       state = state.copyWith(isLoading: false, isGuest: true);
     }
+    routerNotifier.notify();
   }
 
   /// Mengirim kode pemulihan kata sandi
@@ -169,6 +173,7 @@ class AuthNotifier extends StateNotifier<KuraAuthState> {
     state = state.copyWith(isLoading: true);
     await _repo.signOut();
     state = const KuraAuthState(isGuest: false);
+    routerNotifier.notify();
   }
 
   /// Alias signOut untuk konsistensi

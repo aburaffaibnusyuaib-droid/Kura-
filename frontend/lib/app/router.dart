@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_routes.dart';
@@ -27,10 +28,28 @@ import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 import 'shell_scaffold.dart';
 
+/// Notifier reaktif untuk sinkronisasi status autentikasi dengan GoRouter
+class KuraRouterNotifier extends ChangeNotifier {
+  KuraRouterNotifier() {
+    try {
+      Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+        notifyListeners();
+      });
+    } catch (_) {}
+  }
+
+  void notify() {
+    notifyListeners();
+  }
+}
+
+final routerNotifier = KuraRouterNotifier();
+
 /// Router utama aplikasi Kura AI menggunakan go_router.
 final appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
   debugLogDiagnostics: false,
+  refreshListenable: routerNotifier,
   redirect: (context, state) {
     final location = state.uri.path;
 

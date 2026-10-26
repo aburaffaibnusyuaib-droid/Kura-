@@ -66,17 +66,23 @@ final class DetectedIngredient {
   };
 
   factory DetectedIngredient.fromJson(Map<String, dynamic> json) {
+    final name = json['nama_bahan'] as String? ?? json['name'] as String? ?? '';
+    final keyword = json['image_keyword'] as String? ??
+        json['imageKeyword'] as String? ??
+        json['image_search_keyword'] as String? ??
+        (name.isNotEmpty ? name : null);
+
     return DetectedIngredient(
       id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      quantity: json['quantity'] as String? ?? '1 porsi',
+      name: name,
+      quantity: json['jumlah_perkiraan'] as String? ??
+          json['quantity'] as String? ??
+          '1 porsi',
       isSelected: json['isSelected'] as bool? ?? true,
       emoji: json['emoji'] as String? ?? '🥗',
       imageUrl: json['imageUrl'] as String?,
-      imageKeyword: json['imageKeyword'] as String? ??
-          json['image_keyword'] as String? ??
-          json['image_search_keyword'] as String?,
-      category: json['category'] as String?,
+      imageKeyword: keyword,
+      category: json['kategori'] as String? ?? json['category'] as String?,
     );
   }
 }
@@ -190,7 +196,7 @@ final class Recipe {
   };
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
-    final rawSteps = json['steps'] as List<dynamic>? ?? const [];
+    final rawSteps = (json['steps'] ?? json['langkah_memasak']) as List<dynamic>? ?? const [];
     final stepsList = rawSteps.map((s) {
       if (s is String) {
         return RecipeStep(stepNumber: rawSteps.indexOf(s) + 1, instruction: s);
@@ -199,7 +205,7 @@ final class Recipe {
     }).toList();
 
     final rawTags = json['tags'] as List<dynamic>? ?? const ['Zero Waste', 'Praktis'];
-    final rawIngredients = (json['ingredients'] as List<dynamic>?)
+    final rawIngredients = ((json['ingredients'] ?? json['bahan_terpakai']) as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         const [];
@@ -216,16 +222,27 @@ final class Recipe {
 
     return Recipe(
       id: json['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      name: json['name'] as String? ?? json['title'] as String? ?? 'Resep Lezat',
-      durationMinutes: parseSafeInt(json['durationMinutes'] ?? json['cook_time'], 15),
-      difficulty: json['difficulty'] as String? ?? 'Mudah',
+      name: json['name'] as String? ??
+          json['nama_resep'] as String? ??
+          json['title'] as String? ??
+          'Resep Lezat',
+      durationMinutes: parseSafeInt(
+        json['durationMinutes'] ?? json['estimasi_waktu'] ?? json['cook_time'],
+        15,
+      ),
+      difficulty: json['difficulty'] as String? ??
+          json['tingkat_kesulitan'] as String? ??
+          'Mudah',
       tags: rawTags.map((e) => e.toString()).toList(),
       ingredients: rawIngredients,
       steps: stepsList,
       servings: parseSafeInt(json['servings'], 2),
-      description: json['description'] as String? ?? '',
+      description: json['description'] as String? ??
+          'Resep olahan bahan dapur zero waste khas Kura AI.',
       calories: parseSafeInt(json['calories'], 200),
-      zeroWasteTip: json['zeroWasteTip'] as String? ?? json['zero_waste_tip'] as String? ?? '',
+      zeroWasteTip: json['zeroWasteTip'] as String? ??
+          json['zero_waste_tip'] as String? ??
+          'Manfaatkan semua bagian bahan untuk mengurangi sampah dapur.',
       colorHex: json['colorHex'] as int? ?? 0xFF00CBA7,
       imageUrl: json['imageUrl'] as String?,
       isSaved: json['isSaved'] as bool? ?? false,

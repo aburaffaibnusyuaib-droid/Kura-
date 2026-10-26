@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/atur_models.dart';
-import '../utils/food_image_resolver.dart';
+import '../../utils/ingredient_image_resolver.dart';
 
 /// Kartu Grid Bahan Makanan dengan Foto Asli & Checkbox Toska (Mockup 09).
 class IngredientGridCard extends StatelessWidget {
@@ -45,16 +45,46 @@ class IngredientGridCard extends StatelessWidget {
                 flex: 5,
                 child: Stack(
                   children: [
-                    // Foto Bahan Asli (Multi-Tier Image Resolver)
+                    // Foto Bahan Asli (Dynamic Image Resolver)
                     Positioned.fill(
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(14),
                         ),
-                        child: FoodImageWidget(
-                          imageUrl: ingredient.imageUrl,
-                          name: ingredient.name,
-                          category: ingredient.category,
+                        child: Image.network(
+                          (ingredient.imageUrl != null &&
+                                  ingredient.imageUrl!.trim().isNotEmpty)
+                              ? ingredient.imageUrl!
+                              : IngredientImageResolver.getSearchUrl(
+                                  ingredient.imageKeyword ?? ingredient.name),
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: const Color(0xFFF3F4F6),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF00B4A0),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            color: const Color(0xFFE6F7F5),
+                            child: const Center(
+                              child: Icon(
+                                Icons.restaurant_rounded,
+                                color: Color(0xFF00B4A0),
+                                size: 32,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

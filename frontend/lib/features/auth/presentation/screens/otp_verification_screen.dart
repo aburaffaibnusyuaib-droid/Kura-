@@ -185,15 +185,20 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final isTablet = MediaQuery.of(context).size.width > 600;
             return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32.0 : 20.0,
+                vertical: 16.0,
+              ),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - 32).clamp(0, double.infinity),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                       // ── Maskot OTP Flying Plane ─────────────────────────
                       Center(
                         child: ConstrainedBox(
@@ -348,8 +353,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                     ],
                   ),
                 ),
-              ),
-            );
+              );
           },
         ),
       ),

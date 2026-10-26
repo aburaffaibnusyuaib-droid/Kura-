@@ -13,36 +13,42 @@ final class AturMockRepository implements AturRepository {
       name: 'Tomat',
       quantity: '3 buah',
       emoji: '🍅',
+      imageKeyword: 'fresh red tomato raw',
     ),
     DetectedIngredient(
       id: 'i2',
       name: 'Selada',
       quantity: '100 g',
       emoji: '🥬',
+      imageKeyword: 'crisp green lettuce leaves',
     ),
     DetectedIngredient(
       id: 'i3',
       name: 'Wortel',
       quantity: '2 buah',
       emoji: '🥕',
+      imageKeyword: 'fresh orange carrot raw',
     ),
     DetectedIngredient(
       id: 'i4',
       name: 'Telur',
       quantity: '4 butir',
       emoji: '🥚',
+      imageKeyword: 'white chicken egg raw',
     ),
     DetectedIngredient(
       id: 'i5',
       name: 'Cabai',
       quantity: '5 buah',
       emoji: '🌶️',
+      imageKeyword: 'fresh red hot chili pepper',
     ),
     DetectedIngredient(
       id: 'i6',
       name: 'Bawang Merah',
       quantity: '1 siung',
       emoji: '🧅',
+      imageKeyword: 'fresh red shallots cloves',
     ),
   ];
 
