@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_routes.dart';
@@ -23,8 +24,6 @@ import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/welcome_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
-import '../features/auth/presentation/screens/forgot_password_screen.dart';
-import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 import 'shell_scaffold.dart';
 
@@ -32,14 +31,18 @@ import 'shell_scaffold.dart';
 class KuraRouterNotifier extends ChangeNotifier {
   KuraRouterNotifier() {
     try {
-      Supabase.instance.client.auth.onAuthStateChange.listen((_) {
-        notifyListeners();
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
       });
     } catch (_) {}
   }
 
   void notify() {
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 }
 
@@ -53,16 +56,14 @@ final appRouter = GoRouter(
   redirect: (context, state) {
     final location = state.uri.path;
 
-    // Biarkan SplashScreen menyelesaikan animasi pembuka dan handshake sesi
+    // Biarkan SplashScreen menyelesaikan alurnya tanpa interupsi
     if (location == AppRoutes.splash) {
       return null;
     }
 
     final isAuthRoute = location == AppRoutes.welcome ||
         location == AppRoutes.login ||
-        location == AppRoutes.register ||
-        location == AppRoutes.forgotPassword ||
-        location == AppRoutes.otp;
+        location == AppRoutes.register;
 
     final isGuest = LocalStorageService.instance.isGuestMode();
     bool isAuthenticated = LocalStorageService.instance.isAuthSessionActive();
@@ -78,9 +79,9 @@ final appRouter = GoRouter(
       return AppRoutes.home;
     }
 
-    // Jika bukan user resmi dan bukan tamu (eksplisit keluar/tanpa sesi), arahkan ke welcome
+    // Jika bukan user resmi dan bukan tamu (eksplisit keluar/tanpa sesi), arahkan ke login
     if (!isAuthenticated && !isGuest && !isAuthRoute) {
-      return AppRoutes.welcome;
+      return AppRoutes.login;
     }
 
     return null;
@@ -189,18 +190,8 @@ final appRouter = GoRouter(
       builder: (context, state) => const RegisterScreen(),
     ),
     GoRoute(
-      path: AppRoutes.forgotPassword,
-      builder: (context, state) => const ForgotPasswordScreen(),
-    ),
-    GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.otp,
-      builder: (context, state) => OtpVerificationScreen(
-        email: state.uri.queryParameters['email'],
-      ),
     ),
   ],
 );

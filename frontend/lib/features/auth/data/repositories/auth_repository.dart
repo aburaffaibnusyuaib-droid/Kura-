@@ -9,7 +9,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Repository autentikasi terpadu untuk Kura AI menggunakan Supabase Auth.
-/// Menyediakan dukungan Email/Password, Anonymous/Guest Mode, Reset Password, dan OTP.
+/// Menyediakan dukungan Email/Password dan Mode Tamu (Guest Mode).
 class AuthRepository {
   AuthRepository({LocalStorageService? storage})
       : _storage = storage ?? LocalStorageService.instance;
@@ -60,10 +60,24 @@ class AuthRepository {
       if (user != null) {
         await _storage.setGuestMode(false);
         await _storage.setAuthSessionActive(true);
-        final fullName = user.userMetadata?['full_name'] as String?;
-        if (fullName != null && fullName.isNotEmpty) {
-          await _storage.setUserName(fullName);
-        }
+
+        String? profileFullName;
+        try {
+          final profile = await client
+              .from('profiles')
+              .select('full_name')
+              .eq('id', user.id)
+              .maybeSingle();
+          if (profile != null && profile['full_name'] != null) {
+            profileFullName = profile['full_name'] as String;
+          }
+        } catch (_) {}
+
+        final fullName = (profileFullName != null && profileFullName.trim().isNotEmpty)
+            ? profileFullName.trim()
+            : (user.userMetadata?['full_name'] as String? ?? 'Pengguna');
+
+        await _storage.setUserName(fullName);
       }
       return user;
     } on AuthException catch (e) {
@@ -77,18 +91,31 @@ class AuthRepository {
 
   /// Mendaftar akun baru dengan Nama Lengkap, Email, dan Kata Sandi
   /// Konfigurasi Confirm Email nonaktif: sesi dan user langsung terikat.
+  Future<dynamic> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    return signUpWithEmail(
+      email: email,
+      password: password,
+      fullName: fullName,
+    );
+  }
+
+  /// Mendaftar akun baru dengan Nama Lengkap, Email, dan Kata Sandi
   Future<dynamic> signUpWithEmail({
     required String email,
     required String password,
     required String fullName,
   }) async {
-    final client = _client;
-    if (client == null) {
+    final supabase = _client;
+    if (supabase == null) {
       throw const SocketException('Layanan autentikasi belum terhubung. Periksa konfigurasi Supabase.');
     }
 
     try {
-      final response = await client.auth.signUp(
+      final response = await supabase.auth.signUp(
         email: email.trim(),
         password: password.trim(),
         data: {'full_name': fullName.trim()},
@@ -129,56 +156,6 @@ class AuthRepository {
     }
   }
 
-  /// Mengirim email pemulihan instruksi / kode reset password
-  Future<void> resetPasswordForEmail(String email) async {
-    final client = _client;
-    if (client == null) {
-      throw const SocketException('Layanan autentikasi belum terhubung. Periksa konfigurasi Supabase.');
-    }
-
-    try {
-      await client.auth.resetPasswordForEmail(email.trim());
-    } on AuthException catch (e) {
-      throw _handleAuthException(e);
-    } on SocketException catch (_) {
-      throw const SocketException('Koneksi internet bermasalah. Periksa jaringan Anda.');
-    } catch (e) {
-      throw Exception('Gagal mengirim instruksi pemulihan: ${e.toString()}');
-    }
-  }
-
-  /// Verifikasi 6 digit OTP / Token Pemulihan
-  Future<void> verifyOTP(String email, String token) async {
-    final client = _client;
-    if (client == null) {
-      throw const SocketException('Layanan autentikasi belum terhubung. Periksa konfigurasi Supabase.');
-    }
-
-    try {
-      // Coba verifikasi tipe recovery (reset password), jika gagal fallback ke email/signup
-      try {
-        await client.auth.verifyOTP(
-          email: email.trim(),
-          token: token.trim(),
-          type: OtpType.recovery,
-        );
-      } catch (_) {
-        await client.auth.verifyOTP(
-          email: email.trim(),
-          token: token.trim(),
-          type: OtpType.email,
-        );
-      }
-      await _storage.setGuestMode(false);
-    } on AuthException catch (e) {
-      throw _handleAuthException(e);
-    } on SocketException catch (_) {
-      throw const SocketException('Koneksi internet bermasalah. Periksa jaringan Anda.');
-    } catch (e) {
-      throw Exception('Kode verifikasi tidak valid atau kedaluwarsa.');
-    }
-  }
-
   /// Keluar dari sesi akun saat ini
   Future<void> signOut() async {
     final client = _client;
@@ -190,6 +167,7 @@ class AuthRepository {
     await _storage.setAuthSessionActive(false);
     await _storage.setGuestMode(false);
     await _storage.setUserName('Pengguna');
+    await _storage.clearAllCacheAndLocalHistory();
   }
 
   /// Menerjemahkan pesan error Supabase Auth ke Bahasa Indonesia yang ramah pengguna

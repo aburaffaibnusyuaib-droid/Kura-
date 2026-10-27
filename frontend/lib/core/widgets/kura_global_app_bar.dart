@@ -25,9 +25,11 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   /// Menampilkan modal profil asli (ada info akun terverifikasi dan tombol Logout)
   void _showUserProfileModal(BuildContext context, User? user, WidgetRef ref) {
+    final authState = ref.read(authControllerProvider);
+    final displayName = authState.userName ?? LocalStorageService.instance.getUserName();
     final userEmail = (user?.email != null && user!.email!.isNotEmpty)
         ? user.email!
-        : LocalStorageService.instance.getUserName();
+        : '';
 
     showModalBottomSheet<void>(
       context: context,
@@ -67,20 +69,22 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Akun Saya',
+                displayName,
                 style: AppTextStyles.headlineMedium.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                userEmail,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+              if (userEmail.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  userEmail,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -152,7 +156,7 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
                     Navigator.pop(ctx);
                     await ref.read(authControllerProvider.notifier).signOut();
                     if (context.mounted) {
-                      context.go(AppRoutes.welcome);
+                      context.go(AppRoutes.login);
                     }
                   },
                   style: OutlinedButton.styleFrom(
@@ -240,7 +244,9 @@ class KuraGlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    context.push(AppRoutes.welcome);
+                    if (context.mounted) {
+                      context.push(AppRoutes.login);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryTeal,

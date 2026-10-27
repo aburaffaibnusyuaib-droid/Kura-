@@ -162,7 +162,7 @@ class WelcomeScreen extends ConsumerWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
 
                         // Tombol Tamu: Eksplorasi Dulu
                         TextButton(

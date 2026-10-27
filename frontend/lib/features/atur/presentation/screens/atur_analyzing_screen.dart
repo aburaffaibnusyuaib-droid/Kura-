@@ -20,6 +20,7 @@ class AturAnalyzingScreen extends ConsumerStatefulWidget {
 class _AturAnalyzingScreenState extends ConsumerState<AturAnalyzingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _progressCtrl;
+  String? _analysisError;
 
   @override
   void initState() {
@@ -42,11 +43,25 @@ class _AturAnalyzingScreenState extends ConsumerState<AturAnalyzingScreen>
   }
 
   Future<void> _startAnalysis() async {
+    setState(() {
+      _analysisError = null;
+    });
+    _progressCtrl.reset();
+    _progressCtrl.forward();
+
     await ref.read(aturControllerProvider.notifier).analyzeIngredients();
     if (!mounted) return;
-    final status = ref.read(aturControllerProvider).status;
-    if (status == AturAnalysisStatus.detected) {
+    final state = ref.read(aturControllerProvider);
+    if (state.status == AturAnalysisStatus.detected) {
       context.pushReplacement(AppRoutes.aturIngredients);
+    } else if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
+      setState(() {
+        _analysisError = state.errorMessage;
+      });
+    } else if (state.status == AturAnalysisStatus.failed) {
+      setState(() {
+        _analysisError = 'Tidak ada bahan makanan yang terdeteksi dari foto ini. Silakan coba lagi.';
+      });
     } else {
       context.pushReplacement(AppRoutes.aturEmptyIngredients);
     }
@@ -62,6 +77,8 @@ class _AturAnalyzingScreenState extends ConsumerState<AturAnalyzingScreen>
             title: 'Mengenali Bahan Makanan...',
             progress: _progressCtrl.value,
             onBack: () => context.pop(),
+            errorMessage: _analysisError,
+            onRetry: _startAnalysis,
           );
         },
       ),

@@ -1,25 +1,27 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 /// Modern Cinematic Splash Screen untuk Kura.
 ///
 /// Menampilkan animasi pembuka halus (Scale + Fade dengan Curves.easeOutBack),
 /// logo card terpusat dengan soft teal glow shadow, serta handshake rute
-/// sesi pengguna (Auth valid / Mode Tamu -> Home, lainnya -> Welcome).
-class SplashScreen extends StatefulWidget {
+/// sesi pengguna (Auth valid / Mode Tamu -> Home, lainnya -> Login).
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl;
   late final Animation<double> _scaleAnimation;
@@ -62,26 +64,81 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _handleNavigation() {
+  Future<void> _handleNavigation() async {
     if (!mounted) return;
 
+    // Cek sesi aktif Supabase
+    User? user;
+    try {
+      user = Supabase.instance.client.auth.currentUser;
+    } catch (_) {}
+
+    // 1. Jika session aktif (user != null dan bukan anonim)
+    if (user != null && !user.isAnonymous) {
+      try {
+        final supabase = Supabase.instance.client;
+        final profile = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        String fullName = 'Pengguna';
+        if (profile != null && profile['full_name'] != null) {
+          final pName = (profile['full_name'] as String).trim();
+          if (pName.isNotEmpty) fullName = pName;
+        } else if (user.userMetadata?['full_name'] != null) {
+          final mName = (user.userMetadata!['full_name'] as String).trim();
+          if (mName.isNotEmpty) fullName = mName;
+        } else {
+          final cached = LocalStorageService.instance.getUserName();
+          if (cached.isNotEmpty && cached != 'Pengguna') {
+            fullName = cached;
+          }
+        }
+
+        await LocalStorageService.instance.setAuthSessionActive(true);
+        await LocalStorageService.instance.setGuestMode(false);
+        await LocalStorageService.instance.setUserName(fullName);
+
+        if (mounted) {
+          ref.read(authControllerProvider.notifier).syncUserSession(
+            user: user,
+            fullName: fullName,
+          );
+        }
+      } catch (_) {
+        final cached = LocalStorageService.instance.getUserName();
+        if (mounted) {
+          ref.read(authControllerProvider.notifier).syncUserSession(
+            user: user,
+            fullName: cached,
+          );
+        }
+      }
+
+      if (mounted && context.mounted) {
+        context.go(AppRoutes.home);
+      }
+      return;
+    }
+
+    // 2. Cek apakah pengguna berada di Mode Tamu
     bool isGuest = false;
     try {
       isGuest = LocalStorageService.instance.isGuestMode();
     } catch (_) {}
 
-    bool isAuthenticated = false;
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null && !user.isAnonymous) {
-        isAuthenticated = true;
+    if (isGuest) {
+      if (mounted && context.mounted) {
+        context.go(AppRoutes.home);
       }
-    } catch (_) {}
+      return;
+    }
 
-    if (isAuthenticated || isGuest) {
-      context.go(AppRoutes.home);
-    } else {
-      context.go(AppRoutes.welcome);
+    // 3. Jika tidak ada session, arahkan ke layar Login
+    if (mounted && context.mounted) {
+      context.go(AppRoutes.login);
     }
   }
 

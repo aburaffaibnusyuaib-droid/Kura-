@@ -26,21 +26,13 @@ void main() async {
     // Tangani jika terjadi kendala platform storage
   }
 
-  // 3. Inisialisasi Supabase dengan Guest/Anonymous Auth Fallback
+  // 3. Inisialisasi Supabase Client
   if (AppConfig.hasSupabaseConfig) {
     try {
       await Supabase.initialize(
         url: AppConfig.supabaseUrl,
         publishableKey: AppConfig.supabaseAnonKey,
       );
-      final client = Supabase.instance.client;
-      if (client.auth.currentUser == null) {
-        try {
-          await client.auth.signInAnonymously();
-        } catch (_) {
-          // Tetap lanjutkan sebagai tamu jika anonymous auth dinonaktifkan
-        }
-      }
     } catch (_) {
       // Abaikan jika offline atau URL belum aktif agar aplikasi tetap dapat dipakai
     }

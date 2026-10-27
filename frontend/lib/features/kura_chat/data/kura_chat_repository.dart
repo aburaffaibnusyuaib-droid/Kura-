@@ -56,7 +56,11 @@ class KuraChatRepositoryImpl implements KuraChatRepository {
       final file = File(imagePath);
       if (await file.exists()) {
         final raw = await file.readAsBytes();
-        imageBytes = await ImageCompressor.compressBytes(raw);
+        imageBytes = await ImageCompressor.compressBytes(
+          raw,
+          maxDim: 800,
+          quality: 70,
+        );
       }
     }
 
@@ -93,7 +97,7 @@ class KuraChatRepositoryImpl implements KuraChatRepository {
       return ChatMessage(
         id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
         isUser: false,
-        text: 'Waktu respon Kura AI habis (30 detik). Jaringan sedang lambat, silakan coba kirim ulang ya!',
+        text: 'Waktu respon habis (60 detik). Jaringan lambat, silakan coba lagi.',
         timestamp: DateTime.now(),
         status: ChatMessageStatus.error,
       );

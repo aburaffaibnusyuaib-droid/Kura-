@@ -18,6 +18,8 @@ class FoodAnalyzingScreen extends ConsumerStatefulWidget {
 }
 
 class _FoodAnalyzingScreenState extends ConsumerState<FoodAnalyzingScreen> {
+  String? _analysisError;
+
   @override
   void initState() {
     super.initState();
@@ -27,12 +29,15 @@ class _FoodAnalyzingScreenState extends ConsumerState<FoodAnalyzingScreen> {
   }
 
   Future<void> _executeAnalysis() async {
+    setState(() {
+      _analysisError = null;
+    });
+
     final state = ref.read(foodCheckControllerProvider);
     if (state.isOffline) {
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      if (mounted) {
-        context.pushReplacement(AppRoutes.foodCheckOffline);
-      }
+      setState(() {
+        _analysisError = 'Tidak ada koneksi internet. Pastikan perangkat Anda terhubung ke internet.';
+      });
       return;
     }
 
@@ -57,7 +62,11 @@ class _FoodAnalyzingScreenState extends ConsumerState<FoodAnalyzingScreen> {
           context.pushReplacement(AppRoutes.foodCheckResult);
         }
       } else {
-        context.pushReplacement(AppRoutes.foodCheckOffline);
+        final errorMsg = ref.read(foodCheckControllerProvider).errorMessage ??
+            'Waktu respon habis (60 detik) atau koneksi bermasalah. Silakan coba lagi.';
+        setState(() {
+          _analysisError = errorMsg;
+        });
       }
     }
   }
@@ -71,6 +80,8 @@ class _FoodAnalyzingScreenState extends ConsumerState<FoodAnalyzingScreen> {
         title: 'Sedang Memeriksa Makanan...',
         progress: state.analysisProgress,
         onBack: () => context.pop(),
+        errorMessage: _analysisError,
+        onRetry: _executeAnalysis,
       ),
     );
   }

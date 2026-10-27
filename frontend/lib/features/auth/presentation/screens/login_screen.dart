@@ -9,7 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/auth_controller.dart';
 
 /// Layar Masuk / Login Autentikasi Kura AI (Screen 2)
-/// Dilengkapi form email, password, toggle obscure, lupa sandi, dan guest bypass.
+/// Dilengkapi form email, password, toggle obscure, dan mode tamu (guest bypass).
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -48,7 +48,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           backgroundColor: Color(0xFF00B4A0),
         ),
       );
-      context.go(AppRoutes.home);
+      if (context.mounted) {
+        context.go(AppRoutes.home);
+      }
     } else if (mounted) {
       final error = ref.read(authControllerProvider).errorMessage;
       if (error != null) {
@@ -227,32 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                         ),
 
-                        // ── Link Lupa Kata Sandi ────────────────────────────
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                              context.push(AppRoutes.forgotPassword);
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF00B4A0),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 6,
-                              ),
-                            ),
-                            child: Text(
-                              'Lupa Kata Sandi?',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: const Color(0xFF00B4A0),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
 
                         // ── Tombol Masuk Sekarang ───────────────────────────
                         SizedBox(
@@ -288,26 +265,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 16),
-
-                        // ── Divider Atau Masuk Sebagai Tamu ─────────────────
-                        Row(
-                          children: [
-                            const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                'atau',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textHint,
-                                ),
-                              ),
-                            ),
-                            const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
 
                         // ── Tombol Masuk sebagai Tamu ───────────────────────
                         TextButton(

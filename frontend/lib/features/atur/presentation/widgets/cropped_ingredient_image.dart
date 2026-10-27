@@ -51,10 +51,22 @@ class CroppedIngredientImage extends StatelessWidget {
       return fallback ?? _buildDefaultFallback(clipRadius);
     }
 
-    final double ymin = (box2d![0] / 1000).clamp(0.0, 1.0);
-    final double xmin = (box2d![1] / 1000).clamp(0.0, 1.0);
-    final double ymax = (box2d![2] / 1000).clamp(0.0, 1.0);
-    final double xmax = (box2d![3] / 1000).clamp(0.0, 1.0);
+    // Ekstraksi koordinat dasar skala 0-1000 dari Gemini
+    final double rawYmin = (box2d![0] / 1000).clamp(0.0, 1.0);
+    final double rawXmin = (box2d![1] / 1000).clamp(0.0, 1.0);
+    final double rawYmax = (box2d![2] / 1000).clamp(0.0, 1.0);
+    final double rawXmax = (box2d![3] / 1000).clamp(0.0, 1.0);
+
+    // 10% Safety Margin: Perluas batas koordinat 10% ke luar agar fisik bahan tidak terpotong
+    final double rawWidth = (rawXmax - rawXmin).abs();
+    final double rawHeight = (rawYmax - rawYmin).abs();
+    final double marginX = rawWidth * 0.10;
+    final double marginY = rawHeight * 0.10;
+
+    final double xmin = (rawXmin - marginX).clamp(0.0, 1.0);
+    final double ymin = (rawYmin - marginY).clamp(0.0, 1.0);
+    final double xmax = (rawXmax + marginX).clamp(0.0, 1.0);
+    final double ymax = (rawYmax + marginY).clamp(0.0, 1.0);
 
     final double boxWidthRatio = (xmax - xmin).abs().clamp(0.02, 1.0);
     final double boxHeightRatio = (ymax - ymin).abs().clamp(0.02, 1.0);

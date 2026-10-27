@@ -18,13 +18,11 @@ class GeminiService {
   final String apiKey;
   final http.Client _client;
 
-  /// Model prioritas yang didukung Google Generative Language API.
-  /// Urutan fallback otomatis jika model tertentu mengalami 503 high demand atau 404:
+  /// Model prioritas yang didukung Google Generative Language API (Terkunci ke gemini-1.5-flash).
+  static const String primaryModel = 'gemini-1.5-flash';
   static const List<String> _modelHierarchy = [
-    'gemini-1.5-flash',
+    primaryModel,
     'gemini-flash-lite-latest',
-    'gemini-3.8-flash',
-    'gemini-flash-latest',
   ];
 
   static const Map<String, String> _ingredientImageMap = {

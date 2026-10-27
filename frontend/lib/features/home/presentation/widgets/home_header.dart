@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/local_storage_service.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 /// Header salam Home Screen: teks sambutan + ilustrasi maskot.
 /// Logo dan nama app ditampilkan di bagian AppBar custom di [HomeScreen].
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    final greetingName = authState.userName ?? LocalStorageService.instance.getUserName();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppConstants.horizontalPadding,
@@ -27,15 +32,11 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selamat datang kembali,',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
+                  'Halo, $greetingName! 👋',
+                  style: AppTextStyles.displayMedium.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                   ),
-                ),
-                const SizedBox(height: AppConstants.space4),
-                Text(
-                  '${LocalStorageService.instance.getUserName()}! 👋',
-                  style: AppTextStyles.displayMedium,
                 ),
                 const SizedBox(height: AppConstants.space8),
                 Text(

@@ -16,12 +16,16 @@ class KuraAiAnalyzingView extends StatefulWidget {
     this.title = 'Sedang Menganalisis Makanan...',
     this.tickerTexts,
     this.onBack,
+    this.errorMessage,
+    this.onRetry,
   });
 
   final double progress;
   final String title;
   final List<String>? tickerTexts;
   final VoidCallback? onBack;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
 
   static const List<String> defaultTickers = [
     'Menghubungkan ke mata pintar Kura...',
@@ -166,14 +170,107 @@ class _KuraAiAnalyzingViewState extends State<KuraAiAnalyzingView>
               ),
             ),
 
-            // Main Content (Zero Dead Space)
+            // Main Content (Zero Dead Space atau Error State)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    const SizedBox(height: 8),
+                child: (widget.errorMessage != null && widget.errorMessage!.isNotEmpty)
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxHeight: 180,
+                              maxWidth: 180,
+                            ),
+                            child: Image.asset(
+                              'assets/images/mascot_confused.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                Icons.error_outline_rounded,
+                                size: 80,
+                                color: AppColors.statusDanger,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Analisis Belum Berhasil',
+                            style: AppTextStyles.headlineLarge.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              fontSize: 20,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.errorMessage!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 28),
+                          if (widget.onRetry != null)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  HapticFeedback.lightImpact();
+                                  widget.onRetry!();
+                                },
+                                icon: const Icon(Icons.refresh_rounded,
+                                    color: Colors.white),
+                                label: const Text(
+                                  'Coba Lagi',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryTeal,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (widget.onBack != null) ...[
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: OutlinedButton(
+                                onPressed: widget.onBack,
+                                style: OutlinedButton.styleFrom(
+                                  side:
+                                      const BorderSide(color: Color(0xFFD1D5DB)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Kembali',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          const SizedBox(height: 8),
 
                     // ── Bagian Atas-Tengah: Maskot Bernyawa & Soft Glowing Shadow ──
                     Stack(
